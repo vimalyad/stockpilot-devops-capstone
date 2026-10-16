@@ -1,0 +1,32 @@
+{
+  "kind": {
+    "version": "v0.33.0",
+    "url": "https://github.com/kubernetes-sigs/kind/releases/download/v0.33.0/kind-linux-amd64",
+    "sha256": "aee6151561422756b764a4ae28e7f44cda5af5a9eead3cc9985112b1de8d8e0d",
+    "archive": false
+  },
+  "gitleaks": {
+    "version": "v8.30.1",
+    "url": "https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz",
+    "sha256": "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb",
+    "archive": true
+  },
+  "trivy": {
+    "version": "v0.75.0",
+    "url": "https://github.com/aquasecurity/trivy/releases/download/v0.75.0/trivy_0.75.0_Linux-64bit.tar.gz",
+    "sha256": "c6e65abddb348e25f10549df887045629cf28cc72453cd1c63acb717316b3f3f",
+    "archive": true
+  },
+  "kubectl": {
+    "version": "v1.37.1",
+    "url": "https://dl.k8s.io/release/v1.37.1/bin/linux/amd64/kubectl",
+    "sha256": "65691ff77eb6fa44c908b77a1082c9f092c3b9733b5cefabec0d1104890e21a8",
+    "archive": false
+  },
+  "helm": {
+    "version": "v3.22.0",
+    "url": "https://get.helm.sh/helm-v3.22.0-linux-amd64.tar.gz",
+    "sha256": "1e4ab49e429626cf6c6958d914248b78c9730803c2751b87627e171dc800e7bb",
+    "archive": true
+  }
+}

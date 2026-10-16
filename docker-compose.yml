@@ -1,0 +1,84 @@
+name: stockpilot
+x-backend: &backend
+  image: stockpilot-backend:${IMAGE_TAG:-local}
+  build:
+    context: ./backend
+    args:
+      VERSION: ${IMAGE_TAG:-local}
+  environment: &backend-env
+    DATABASE_URL: postgresql+psycopg://stockpilot:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@postgres:5432/stockpilot
+    REDIS_URL: redis://redis:6379/0
+  restart: unless-stopped
+  read_only: true
+  tmpfs: [/tmp]
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: stockpilot
+      POSTGRES_DB: stockpilot
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    volumes: [postgres-data:/var/lib/postgresql/data]
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U stockpilot -d stockpilot]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+  redis:
+    image: redis:7.4-alpine
+    command: [redis-server, --appendonly, "yes"]
+    volumes: [redis-data:/data]
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+  migrate:
+    <<: *backend
+    command: [sh, -ec, "alembic upgrade head && python -m app.seed"]
+    restart: "no"
+    depends_on:
+      postgres: {condition: service_healthy}
+  backend:
+    <<: *backend
+    ports: ["127.0.0.1:8000:8000"]
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+      redis: {condition: service_healthy}
+  worker:
+    <<: *backend
+    command: [celery, -A, app.tasks:celery, worker, --loglevel=info, --concurrency=2]
+    healthcheck:
+      test: [CMD-SHELL, "celery -A app.tasks:celery inspect ping -d celery@$$HOSTNAME --timeout 5 | grep -q pong"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+      redis: {condition: service_healthy}
+  scheduler:
+    <<: *backend
+    command: [celery, -A, app.tasks:celery, beat, --loglevel=info, --schedule=/tmp/celerybeat-schedule]
+    healthcheck: {disable: true}
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+      redis: {condition: service_healthy}
+  frontend:
+    image: stockpilot-frontend:${IMAGE_TAG:-local}
+    build: ./frontend
+    ports: ["127.0.0.1:3000:8080"]
+    depends_on:
+      backend: {condition: service_healthy}
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    restart: unless-stopped
+volumes:
+  postgres-data:
+  redis-data:
