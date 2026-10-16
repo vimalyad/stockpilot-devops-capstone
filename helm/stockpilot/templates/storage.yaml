@@ -32,9 +32,9 @@ spec:
       automountServiceAccountToken: false
       securityContext:
         runAsNonRoot: true
-        runAsUser: 999
-        runAsGroup: 999
-        fsGroup: 999
+        runAsUser: {{ if $postgres }}70{{ else }}999{{ end }}
+        runAsGroup: {{ if $postgres }}70{{ else }}999{{ end }}
+        fsGroup: {{ if $postgres }}70{{ else }}999{{ end }}
         seccompProfile: {type: RuntimeDefault}
       containers:
         - name: {{ $component }}

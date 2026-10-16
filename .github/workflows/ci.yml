@@ -1,0 +1,189 @@
+name: StockPilot delivery
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['**.md', 'docs/**', 'gitops/release.yaml']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: stockpilot-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+env:
+  IMAGE_PREFIX: ghcr.io/${{ github.repository_owner }}/stockpilot-devops-capstone
+  IMAGE_TAG: ${{ github.sha }}
+defaults:
+  run:
+    shell: bash
+jobs:
+  backend:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: stockpilot_test
+          POSTGRES_USER: stockpilot
+          POSTGRES_PASSWORD: isolated-ci-password
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U stockpilot -d stockpilot_test"
+          --health-interval 5s --health-timeout 3s --health-retries 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with: {persist-credentials: false}
+      - name: Test API and transaction invariants on PostgreSQL
+        env:
+          ALLOW_TEST_DATABASE_RESET: "yes"
+          TEST_DATABASE_URL: postgresql+psycopg://stockpilot:isolated-ci-password@localhost:5432/stockpilot_test
+        run: |
+          python3 -m venv .venv
+          .venv/bin/pip install -r backend/requirements-dev.txt
+          mkdir -p reports
+          cd backend
+          ../.venv/bin/pytest -v --cov=app --cov-report=term --cov-report=xml:../reports/coverage.xml --junitxml=../reports/pytest.xml
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: always()
+        with: {name: backend-tests, path: reports/, retention-days: 14}
+  frontend:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with: {node-version: '24', cache: npm, cache-dependency-path: frontend/package-lock.json}
+      - run: npm ci --no-fund && npm run build
+        working-directory: frontend
+  source-security:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with: {fetch-depth: 0, persist-credentials: false}
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with: {node-version: '24'}
+      - name: Install checksum-verified tools and pinned source scanners
+        run: |
+          mkdir -p reports
+          python3 scripts/install-tools.py gitleaks trivy
+          python3 -m venv .security
+          .security/bin/pip install -r security/requirements.txt
+      - name: Python SAST
+        run: .security/bin/bandit -r backend/app -ll -ii -f json -o reports/bandit.json
+      - name: Multi-language SAST
+        run: .security/bin/semgrep scan --config p/python --config p/typescript --error --metrics=off --json --output reports/semgrep.json backend/app frontend/src
+      - name: Python dependency audit
+        run: .security/bin/pip-audit -r backend/requirements.txt --strict --format json --output reports/pip-audit.json
+      - name: JavaScript dependency audit
+        run: npm audit --audit-level=high --json > ../reports/npm-audit.json
+        working-directory: frontend
+      - name: Git history secret scan
+        run: .tools/bin/gitleaks git --redact --log-opts="--all" --report-format json --report-path reports/gitleaks.json .
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: always()
+        with: {name: source-security, path: reports/, retention-days: 14}
+  infrastructure:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with: {persist-credentials: false}
+      - name: Validate chart, Terraform and configuration security
+        run: |
+          mkdir -p reports
+          python3 scripts/install-tools.py helm terraform trivy
+          .tools/bin/helm lint helm/stockpilot --set monitoring.enabled=true
+          .tools/bin/helm template stockpilot helm/stockpilot --namespace stockpilot --set monitoring.enabled=true > reports/manifests.yaml
+          .tools/bin/terraform -chdir=terraform fmt -check
+          .tools/bin/terraform -chdir=terraform init -backend=false
+          .tools/bin/terraform -chdir=terraform validate
+          .tools/bin/trivy config --severity HIGH,CRITICAL --exit-code 1 --ignorefile security/.trivyignore --format json --output reports/iac.json --skip-dirs frontend/node_modules,backend/.venv,.venv,.security,.tools,docs,troubleshooting .
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: always()
+        with: {name: infrastructure-validation, path: reports/, retention-days: 14}
+  images:
+    needs: [backend, frontend, source-security, infrastructure]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with: {persist-credentials: false}
+      - name: Build both non-root application images
+        run: |
+          mkdir -p reports
+          for component in backend frontend; do
+            docker build --build-arg VERSION="$IMAGE_TAG" -t "$IMAGE_PREFIX-$component:$IMAGE_TAG" "$component"
+          done
+          python3 scripts/install-tools.py trivy
+      - name: Block all HIGH and CRITICAL image vulnerabilities
+        run: |
+          scan_status=0
+          for component in backend frontend; do
+            .tools/bin/trivy image --scanners vuln --severity HIGH,CRITICAL --exit-code 1 --timeout 10m --format json --output "reports/$component-trivy.json" "$IMAGE_PREFIX-$component:$IMAGE_TAG" || scan_status=1
+          done
+          exit "$scan_status"
+      - name: Publish immutable commit images and verify registry pull
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        env:
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          printf '%s' "$REGISTRY_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          for component in backend frontend; do
+            docker push "$IMAGE_PREFIX-$component:$IMAGE_TAG" | tee "reports/$component-push.txt"
+            docker pull "$IMAGE_PREFIX-$component:$IMAGE_TAG" | tee "reports/$component-pull.txt"
+            docker inspect --format='{{json .RepoDigests}}' "$IMAGE_PREFIX-$component:$IMAGE_TAG" > "reports/$component-digest.json"
+          done
+      - name: Export verified image artifacts
+        run: docker save "$IMAGE_PREFIX-backend:$IMAGE_TAG" "$IMAGE_PREFIX-frontend:$IMAGE_TAG" -o images.tar
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with: {name: tested-images, path: images.tar, retention-days: 2}
+      - name: Log out
+        if: always()
+        run: docker logout ghcr.io
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: always()
+        with: {name: image-security, path: reports/, retention-days: 14}
+  deploy:
+    needs: images
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with: {name: tested-images, path: .}
+      - name: Install temporary-cluster tools
+        run: python3 scripts/install-tools.py kind kubectl helm
+      - name: Deploy exact scanned images and smoke-test all services
+        run: bash scripts/ci-deploy.sh
+      - name: Always destroy temporary cluster
+        if: always()
+        run: .tools/bin/kind delete cluster --name "stockpilot-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: always()
+        with: {name: kubernetes-deployment, path: reports/, retention-days: 14}
+  promote:
+    needs: deploy
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions: {contents: write}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with: {ref: main, fetch-depth: 0}
+      - name: Promote tested commit in GitOps desired state
+        run: |
+          python3 scripts/promote.py "$IMAGE_TAG"
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add gitops/release.yaml
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "Promote StockPilot ${IMAGE_TAG}"
+          git push origin HEAD:main

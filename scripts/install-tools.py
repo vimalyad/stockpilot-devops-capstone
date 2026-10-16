@@ -6,6 +6,7 @@ from pathlib import Path
 import subprocess
 import sys
 import tarfile
+import zipfile
 
 root=Path(__file__).resolve().parent.parent
 versions=json.loads((root/'scripts/tools.json').read_text())
@@ -17,7 +18,10 @@ for name in sys.argv[1:]:
         '--retry','3','--max-time','180',tool['url']])
     if hashlib.sha256(content).hexdigest()!=tool['sha256']:
         raise SystemExit('Checksum mismatch for '+name)
-    if tool['archive']:
+    if tool.get('format') == 'zip':
+        with zipfile.ZipFile(io.BytesIO(content)) as archive:
+            content=archive.read(name)
+    elif tool['archive']:
         with tarfile.open(fileobj=io.BytesIO(content),mode='r:gz') as archive:
             member=next(m for m in archive.getmembers() if m.isfile() and Path(m.name).name==name)
             content=archive.extractfile(member).read()
