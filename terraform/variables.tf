@@ -10,7 +10,7 @@ variable "operator_cidr" {
   type        = string
   description = "Operator's current public IPv4 /32; required for API access."
   validation {
-    condition     = can(cidrhost(var.operator_cidr, 0)) && endswith(var.operator_cidr, "/32")
+    condition     = can(cidrhost(var.operator_cidr, 0)) && can(regex("^([0-9]{1,3}\\.){3}[0-9]{1,3}/32$", var.operator_cidr))
     error_message = "Use a valid single IPv4 address with /32."
   }
 }
