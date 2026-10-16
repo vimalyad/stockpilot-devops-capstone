@@ -4,6 +4,7 @@ import sys
 from pathlib import Path
 from unittest.mock import Mock
 
+import pytest
 from sqlalchemy import create_engine, inspect, select
 from sqlalchemy.exc import OperationalError
 
@@ -25,6 +26,15 @@ def test_root_and_release_identity(client, monkeypatch):
     monkeypatch.setenv("APP_VERSION", "a" * 40)
     assert client.get("/").json()["docs"] == "/docs"
     assert client.get("/api/meta").json()["version"] == "a" * 40
+
+
+def test_unhandled_failures_remain_visible_in_http_metrics(client, monkeypatch):
+    monkeypatch.setattr(main, "snapshot", Mock(side_effect=RuntimeError("database offline")))
+    with pytest.raises(RuntimeError, match="database offline"):
+        client.get("/api/dashboard")
+    metrics = client.get("/metrics").text
+    assert 'stockpilot_http_requests_total{method="GET",route="/api/dashboard",status="500"} 1.0' in metrics
+    assert 'stockpilot_http_request_duration_seconds_count{method="GET",route="/api/dashboard"} 1.0' in metrics
 
 
 def test_background_report_and_missing_cache(client, catalog, database, monkeypatch):

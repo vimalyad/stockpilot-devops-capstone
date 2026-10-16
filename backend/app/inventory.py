@@ -103,6 +103,8 @@ def movements(db: DB, limit: int = Query(50, ge=1, le=200)):
 
 @router.post("/movements", response_model=MovementOut, status_code=201)
 def create_movement(data: MovementIn, db: DB):
+    if data.idempotency_key.startswith(("reservation-fulfill-", "po-receive-")):
+        raise HTTPException(422, "Idempotency key prefix is reserved for internal stock operations")
     row = apply_movement(db, data)
     db.commit()
     return row

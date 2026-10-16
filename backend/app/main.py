@@ -39,22 +39,26 @@ def create_app():
     @app.middleware("http")
     async def observe(request: Request, call_next):
         started = time.perf_counter()
-        response = await call_next(request)
-        route = getattr(request.scope.get("route"), "path", "unmatched")
-        elapsed = time.perf_counter() - started
-        if route != "/metrics":
-            requests.labels(request.method, route, response.status_code).inc()
-            latency.labels(request.method, route).observe(elapsed)
-            log.info(
-                json.dumps(
-                    {
-                        "method": request.method,
-                        "route": route,
-                        "status": response.status_code,
-                        "duration_ms": round(elapsed * 1000, 2),
-                    }
+        status = 500
+        try:
+            response = await call_next(request)
+            status = response.status_code
+        finally:
+            route = getattr(request.scope.get("route"), "path", "unmatched")
+            elapsed = time.perf_counter() - started
+            if route != "/metrics":
+                requests.labels(request.method, route, status).inc()
+                latency.labels(request.method, route).observe(elapsed)
+                log.info(
+                    json.dumps(
+                        {
+                            "method": request.method,
+                            "route": route,
+                            "status": status,
+                            "duration_ms": round(elapsed * 1000, 2),
+                        }
+                    )
                 )
-            )
         response.headers["X-Content-Type-Options"] = "nosniff"
         return response
 

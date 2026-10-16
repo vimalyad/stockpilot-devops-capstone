@@ -25,7 +25,7 @@ def snapshot(db):
             "name": p.name,
             "available": hand - reserved,
             "reorder_point": p.reorder_point,
-            "recommended_quantity": max(p.reorder_point * 2 - hand + reserved, 1),
+            "recommended_quantity": min(1_000_000, max(p.reorder_point * 2 - hand + reserved, 1)),
             "supplier_id": p.supplier_id,
         }
         for p, hand, reserved in rows

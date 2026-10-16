@@ -103,6 +103,32 @@ def test_history_cannot_be_deleted(client, catalog):
     assert client.delete(f"/api/products/{catalog['product']['id']}").status_code == 409
 
 
+@pytest.mark.parametrize("key", ["reservation-fulfill-1", "po-receive-1-1"])
+def test_client_cannot_preclaim_internal_movement_keys(client, catalog, key):
+    response = client.post("/api/movements", json=movement(catalog, idempotency_key=key))
+    assert response.status_code == 422
+    assert client.get("/api/movements").json() == []
+    assert client.get("/api/inventory").json() == []
+
+
+def test_large_reorder_recommendation_can_be_used_in_an_order(client, catalog):
+    product = catalog["product"]
+    payload = {key: value for key, value in product.items() if key != "id"}
+    payload["reorder_point"] = 100_000_000
+    assert client.put(f"/api/products/{product['id']}", json=payload).status_code == 200
+    quantity = client.get("/api/dashboard").json()["low_stock"][0]["recommended_quantity"]
+    assert quantity == 1_000_000
+    response = client.post(
+        "/api/purchase-orders",
+        json={
+            "supplier_id": catalog["supplier"]["id"],
+            "warehouse_id": catalog["warehouses"][0]["id"],
+            "items": [{"product_id": product["id"], "quantity": quantity, "unit_cost_cents": 1200}],
+        },
+    )
+    assert response.status_code == 201
+
+
 def test_dashboard_includes_zero_stock_and_valuation(client, catalog):
     assert client.get("/api/dashboard").json()["low_stock"][0]["available"] == 0
     client.post("/api/movements", json=movement(catalog))
