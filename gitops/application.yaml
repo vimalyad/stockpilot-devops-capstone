@@ -1,0 +1,35 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: stockpilot
+  namespace: argocd
+spec:
+  project: stockpilot
+  sources:
+    - repoURL: https://github.com/vimalyad/stockpilot-devops-capstone.git
+      targetRevision: main
+      path: helm/stockpilot
+      helm:
+        releaseName: stockpilot
+        valueFiles: [$values/gitops/release.yaml]
+    - repoURL: https://github.com/vimalyad/stockpilot-devops-capstone.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: stockpilot
+  syncPolicy:
+    automated: {prune: true, selfHeal: true}
+    syncOptions: [CreateNamespace=true, ServerSideApply=true]
+    managedNamespaceMetadata:
+      labels:
+        pod-security.kubernetes.io/enforce: restricted
+        pod-security.kubernetes.io/audit: restricted
+        pod-security.kubernetes.io/warn: restricted
+    retry:
+      limit: 3
+      backoff: {duration: 5s, factor: 2, maxDuration: 3m}
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      jsonPointers: [/spec/replicas]

@@ -1,0 +1,9 @@
+# The promotion job replaces these development tags only after all gates pass.
+backend:
+  image:
+    repository: ghcr.io/vimalyad/stockpilot-devops-capstone-backend
+    tag: development
+frontend:
+  image:
+    repository: ghcr.io/vimalyad/stockpilot-devops-capstone-frontend
+    tag: development

@@ -1,0 +1,51 @@
+{{- if .Values.monitoring.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: stockpilot
+  labels: {release: {{ .Values.monitoring.release }}}
+spec:
+  selector:
+    matchLabels: {app.kubernetes.io/name: stockpilot, app.kubernetes.io/component: backend}
+  endpoints:
+    - {port: http, path: /metrics, interval: 15s, scrapeTimeout: 10s}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: stockpilot-alerts
+  labels: {release: {{ .Values.monitoring.release }}}
+spec:
+  groups:
+    - name: stockpilot
+      rules:
+        - alert: StockPilotApiUnavailable
+          expr: sum(up{namespace="{{ .Release.Namespace }}",service="backend"}) == 0 or absent(up{namespace="{{ .Release.Namespace }}",service="backend"})
+          for: 2m
+          labels: {severity: critical}
+          annotations: {summary: "All StockPilot API scrape targets are down"}
+        - alert: StockPilotElevatedErrors
+          expr: sum(rate(stockpilot_http_requests_total{namespace="{{ .Release.Namespace }}",status=~"5.."}[5m])) / clamp_min(sum(rate(stockpilot_http_requests_total{namespace="{{ .Release.Namespace }}"}[5m])), 0.01) > 0.05
+          for: 5m
+          labels: {severity: warning}
+          annotations: {summary: "StockPilot server errors exceed 5 percent"}
+        - alert: StockPilotHighLatency
+          expr: histogram_quantile(0.95, sum by (le) (rate(stockpilot_http_request_duration_seconds_bucket{namespace="{{ .Release.Namespace }}"}[5m]))) > 1
+          for: 5m
+          labels: {severity: warning}
+          annotations: {summary: "StockPilot p95 API latency exceeds one second"}
+        - alert: StockPilotWorkerUnavailable
+          expr: kube_deployment_status_replicas_available{namespace="{{ .Release.Namespace }}",deployment="worker"} < 1
+          for: 3m
+          labels: {severity: warning}
+          annotations: {summary: "StockPilot has no available background workers"}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: stockpilot-dashboard
+  labels: {grafana_dashboard: "1"}
+data:
+  stockpilot.json: |
+    {{- .Files.Get "dashboards/stockpilot.json" | nindent 4 }}
+{{- end }}
