@@ -61,7 +61,7 @@ resource "aws_eks_node_group" "lab" {
     id      = aws_launch_template.node.id
     version = aws_launch_template.node.latest_version
   }
-  depends_on = [aws_iam_role_policy_attachment.node, aws_route_table_association.private]
+  depends_on = [aws_iam_role_policy_attachment.node, aws_route_table_association.private, aws_route.private_nat]
 }
 resource "aws_eks_addon" "pod_identity" {
   cluster_name = aws_eks_cluster.lab.name

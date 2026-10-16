@@ -20,7 +20,7 @@ spec:
     namespace: stockpilot
   syncPolicy:
     automated: {prune: true, selfHeal: true}
-    syncOptions: [CreateNamespace=true, ServerSideApply=true]
+    syncOptions: [CreateNamespace=true, ServerSideApply=true, RespectIgnoreDifferences=true]
     managedNamespaceMetadata:
       labels:
         pod-security.kubernetes.io/enforce: restricted

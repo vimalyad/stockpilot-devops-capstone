@@ -15,7 +15,7 @@ kubectl -n stockpilot port-forward svc/frontend 3000:8080
 
 On a local cluster, install an Ingress controller and metrics-server separately for hostname routing and HPA. Use `--set ingress.enabled=false --set autoscaling.enabled=false` for an initial minimal smoke run. Enable monitoring only after the Prometheus Operator CRDs exist. On EKS install the included StorageClass and pass `--set postgres.storageClass=stockpilot-gp3` (applies to both stateful services).
 
-The migration runs once per Helm revision, with retries while the database starts. API/worker/scheduler init containers wait for the products table. Argo CD uses sync waves so config precedes stateful services, migration precedes application workloads, and a single beat scheduler avoids duplicate periodic tasks. Successful migration Jobs are retained for logs; prune old revision Jobs after retaining evidence.
+The migration runs once per Helm revision, with retries while the database starts. API/worker/scheduler init containers wait until database Alembic heads match the migrations packaged in that application image. Argo CD uses sync waves so config precedes stateful services, migration precedes application workloads, and a single beat scheduler avoids duplicate periodic tasks. Successful migration Jobs are retained for logs; prune old revision Jobs after retaining evidence.
 
 The demo seed is idempotent and can be disabled with `--set seedDemo=false`. Supply `stockpilot-secrets` keys `POSTGRES_PASSWORD` and `DATABASE_URL`; Helm never embeds a default password. GHCR packages must be public or an imagePullSecret must be supplied. Release names are tracked by labels, but service names are fixed; install one StockPilot release per namespace.
 

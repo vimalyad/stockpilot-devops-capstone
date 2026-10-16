@@ -9,3 +9,5 @@ Database credentials are external environment/Secret values. The CI-only databas
 This project has no authentication/RBAC or tenant isolation. Keep the demonstration private. API validation and transactional integrity do not provide authorization. TLS must be configured through Ingress before Internet exposure. PostgreSQL/Redis are durable single instances, not highly available managed services.
 
 No successful remote scan or container deployment is claimed until an actual CI run is recorded. Base images and vulnerability databases change; a clean scan is specific to its run and does not establish permanent safety.
+
+The sole IaC exception is `AWS-0040`: EKS retains a public control-plane endpoint for operator access, restricted to the required single IPv4 `/32`; private access also remains enabled. This is not an Internet-wide API rule. Production should use a private operator path and disable public access. No CVE/image exceptions are configured.

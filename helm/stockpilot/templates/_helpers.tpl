@@ -24,12 +24,17 @@ capabilities:
   args:
     - |
       import time
-      from sqlalchemy import text
+      from alembic.config import Config
+      from alembic.runtime.migration import MigrationContext
+      from alembic.script import ScriptDirectory
       from app.database import engine
+      expected_heads = set(ScriptDirectory.from_config(Config("alembic.ini")).get_heads())
       for attempt in range(120):
           try:
               with engine.connect() as connection:
-                  connection.execute(text("SELECT 1 FROM products LIMIT 1"))
+                  current_heads = set(MigrationContext.configure(connection).get_current_heads())
+                  if current_heads != expected_heads:
+                      raise RuntimeError("Database schema does not match this application release")
               break
           except Exception:
               time.sleep(2)

@@ -1,1 +1,5 @@
-# No vulnerability suppressions. IaC exceptions, when necessary, are explained in README.md.
+# Accepted IaC risk only; no image vulnerability suppressions.
+# AWS-0040: The demo EKS public API supports operator kubectl access.
+# public_access_cidrs is constrained to one required IPv4 /32; private API remains enabled.
+# Production deployments should disable public access and use a private operator path.
+AWS-0040
