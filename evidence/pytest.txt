@@ -1,0 +1,74 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.15, pytest-9.1.1, pluggy-1.7.0 -- /var/home/vimal2907/assignment/devops-assignment/.local/stockpilot/venv/bin/python
+cachedir: .pytest_cache
+rootdir: /var/home/vimal2907/assignment/devops-assignment/repositories/stockpilot-devops-capstone/backend
+configfile: pytest.ini
+testpaths: tests
+plugins: anyio-4.15.1, cov-7.1.0
+collecting ... collected 41 items
+
+tests/test_catalog.py::test_health_without_database PASSED               [  2%]
+tests/test_catalog.py::test_documentation_and_metrics PASSED             [  4%]
+tests/test_catalog.py::test_product_crud PASSED                          [  7%]
+tests/test_catalog.py::test_invalid_product_rejected[change0] PASSED     [  9%]
+tests/test_catalog.py::test_invalid_product_rejected[change1] PASSED     [ 12%]
+tests/test_catalog.py::test_invalid_product_rejected[change2] PASSED     [ 14%]
+tests/test_catalog.py::test_invalid_product_rejected[change3] PASSED     [ 17%]
+tests/test_catalog.py::test_invalid_product_rejected[change4] PASSED     [ 19%]
+tests/test_catalog.py::test_duplicate_sku_conflict PASSED                [ 21%]
+tests/test_catalog.py::test_supplier_reference_and_missing_product PASSED [ 24%]
+tests/test_catalog.py::test_product_supplier_must_exist PASSED           [ 26%]
+tests/test_catalog.py::test_suppliers_crud PASSED                        [ 29%]
+tests/test_catalog.py::test_search_does_not_treat_percent_as_wildcard PASSED [ 31%]
+tests/test_inventory.py::test_receipt_retries_and_payload_mismatch PASSED [ 34%]
+tests/test_inventory.py::test_transfer_preserves_total_stock PASSED      [ 36%]
+tests/test_inventory.py::test_failed_transfer_rolls_back_source PASSED   [ 39%]
+tests/test_inventory.py::test_invalid_movements[change0] PASSED          [ 41%]
+tests/test_inventory.py::test_invalid_movements[change1] PASSED          [ 43%]
+tests/test_inventory.py::test_invalid_movements[change2] PASSED          [ 46%]
+tests/test_inventory.py::test_invalid_movements[change3] PASSED          [ 48%]
+tests/test_inventory.py::test_invalid_movements[change4] PASSED          [ 51%]
+tests/test_inventory.py::test_reservation_protects_stock_and_release_is_idempotent PASSED [ 53%]
+tests/test_inventory.py::test_fulfillment_deducts_once PASSED            [ 56%]
+tests/test_inventory.py::test_history_cannot_be_deleted PASSED           [ 58%]
+tests/test_inventory.py::test_client_cannot_preclaim_internal_movement_keys[reservation-fulfill-1] PASSED [ 60%]
+tests/test_inventory.py::test_client_cannot_preclaim_internal_movement_keys[po-receive-1-1] PASSED [ 63%]
+tests/test_inventory.py::test_large_reorder_recommendation_can_be_used_in_an_order PASSED [ 65%]
+tests/test_inventory.py::test_dashboard_includes_zero_stock_and_valuation PASSED [ 68%]
+tests/test_inventory.py::test_concurrent_issues_cannot_oversell SKIPPED  [ 70%]
+tests/test_operations.py::test_readiness_checks_database PASSED          [ 73%]
+tests/test_operations.py::test_root_and_release_identity PASSED          [ 75%]
+tests/test_operations.py::test_unhandled_failures_remain_visible_in_http_metrics PASSED [ 78%]
+tests/test_operations.py::test_background_report_and_missing_cache PASSED [ 80%]
+tests/test_operations.py::test_demo_seed_is_repeatable PASSED            [ 82%]
+tests/test_operations.py::test_alembic_upgrade_downgrade_round_trip PASSED [ 85%]
+tests/test_orders.py::test_order_state_machine_and_duplicate_receipt PASSED [ 87%]
+tests/test_orders.py::test_cancelled_order_does_not_receive PASSED       [ 90%]
+tests/test_orders.py::test_order_rejects_duplicate_lines_and_wrong_supplier PASSED [ 92%]
+tests/test_reports.py::test_report_request_is_async PASSED               [ 95%]
+tests/test_reports.py::test_broker_failure_does_not_break_catalog PASSED [ 97%]
+tests/test_reports.py::test_report_cache_outage_is_explicit PASSED       [100%]
+
+- generated xml file: /var/home/vimal2907/assignment/devops-assignment/repositories/stockpilot-devops-capstone/evidence/pytest.xml -
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.12.15-final-0 _______________
+
+Name               Stmts   Miss  Cover   Missing
+------------------------------------------------
+app/__init__.py        0      0   100%
+app/catalog.py        74      1    99%   100
+app/database.py       14      3    79%   19, 31-32
+app/inventory.py     100      5    95%   25, 55, 115, 126, 138
+app/main.py           85      0   100%
+app/models.py         79      0   100%
+app/orders.py         61      4    93%   25, 30, 48, 65
+app/reporting.py      12      0   100%
+app/schemas.py        76      0   100%
+app/seed.py           26      1    96%   65
+app/tasks.py          19      1    95%   29
+------------------------------------------------
+TOTAL                546     15    97%
+Coverage XML written to file ../evidence/coverage.xml
+=========================== short test summary info ============================
+SKIPPED [1] tests/test_inventory.py:152: Requires a PostgreSQL test database for row locks
+======================== 40 passed, 1 skipped in 37.75s ========================

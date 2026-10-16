@@ -1,0 +1,131 @@
+{
+  "product_count": 8,
+  "on_hand": 931,
+  "reserved": 0,
+  "available": 931,
+  "inventory_value_cents": 309446900,
+  "open_orders": 0,
+  "low_stock": [
+    {
+      "product_id": 7,
+      "sku": "PD-900",
+      "name": "Felt desk mat",
+      "available": 26,
+      "reorder_point": 35,
+      "recommended_quantity": 44,
+      "supplier_id": 2
+    },
+    {
+      "product_id": 5,
+      "sku": "HB-007",
+      "name": "Seven-port USB hub",
+      "available": 20,
+      "reorder_point": 25,
+      "recommended_quantity": 30,
+      "supplier_id": 1
+    },
+    {
+      "product_id": 2,
+      "sku": "MS-220",
+      "name": "Wireless precision mouse",
+      "available": 24,
+      "reorder_point": 30,
+      "recommended_quantity": 36,
+      "supplier_id": 1
+    }
+  ],
+  "warehouses": [
+    {
+      "name": "Delhi distribution",
+      "units": 602
+    },
+    {
+      "name": "Bengaluru fulfilment",
+      "units": 329
+    }
+  ],
+  "categories": [
+    {
+      "name": "Accessories",
+      "units": 385
+    },
+    {
+      "name": "Audio",
+      "units": 72
+    },
+    {
+      "name": "Peripherals",
+      "units": 216
+    },
+    {
+      "name": "Workspace",
+      "units": 258
+    }
+  ],
+  "recent_movements": [
+    {
+      "id": 16,
+      "product_id": 8,
+      "kind": "receipt",
+      "quantity": 24,
+      "reference": "Opening demo inventory",
+      "created_at": "2026-10-16T17:35:48.217350"
+    },
+    {
+      "id": 15,
+      "product_id": 8,
+      "kind": "receipt",
+      "quantity": 48,
+      "reference": "Opening demo inventory",
+      "created_at": "2026-10-16T17:35:48.209456"
+    },
+    {
+      "id": 14,
+      "product_id": 7,
+      "kind": "receipt",
+      "quantity": 10,
+      "reference": "Opening demo inventory",
+      "created_at": "2026-10-16T17:35:48.203774"
+    },
+    {
+      "id": 13,
+      "product_id": 7,
+      "kind": "receipt",
+      "quantity": 16,
+      "reference": "Opening demo inventory",
+      "created_at": "2026-10-16T17:35:48.199935"
+    },
+    {
+      "id": 12,
+      "product_id": 6,
+      "kind": "receipt",
+      "quantity": 30,
+      "reference": "Opening demo inventory",
+      "created_at": "2026-10-16T17:35:48.196180"
+    },
+    {
+      "id": 11,
+      "product_id": 6,
+      "kind": "receipt",
+      "quantity": 75,
+      "reference": "Opening demo inventory",
+      "created_at": "2026-10-16T17:35:48.192381"
+    },
+    {
+      "id": 10,
+      "product_id": 5,
+      "kind": "receipt",
+      "quantity": 8,
+      "reference": "Opening demo inventory",
+      "created_at": "2026-10-16T17:35:48.188199"
+    },
+    {
+      "id": 9,
+      "product_id": 5,
+      "kind": "receipt",
+      "quantity": 12,
+      "reference": "Opening demo inventory",
+      "created_at": "2026-10-16T17:35:48.184589"
+    }
+  ]
+}

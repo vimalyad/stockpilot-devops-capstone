@@ -1,0 +1,25 @@
+
+> stockpilot-frontend@1.0.0 test
+> node --test --test-isolation=none tests/workspace.test.mjs
+
+✔ request keys support insecure local-cluster HTTP without randomUUID (7.71181ms)
+✔ CSV protects spreadsheet formulas and preserves quotes, commas and line breaks (1.437564ms)
+✔ loads API data into dashboard and supports all eight workspace views (1104.112317ms)
+✔ shows a server error and can recover by retrying (149.731189ms)
+✔ product creation sends API schema and converts rupees to integer cents (272.585492ms)
+✔ transfer retries reuse idempotency keys and show real insufficient-stock error (328.296829ms)
+✔ purchase order draft form limits lines to selected supplier and submits costs (251.97867ms)
+✔ reports expose unavailable background processing without hiding live inventory (184.096483ms)
+✔ purchase orders move from draft through ordered to received using explicit actions (354.385773ms)
+✔ reservations reserve inventory then fulfill through the API (381.771137ms)
+✔ destructive actions ask for confirmation and display referenced-record conflicts (241.659449ms)
+✔ cached reports show readable snapshot metrics and timestamp (205.629549ms)
+✔ catalog loads every API page and searches products beyond the first 200 records (519.830277ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 13
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 6517.29947
