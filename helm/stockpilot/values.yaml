@@ -1,0 +1,51 @@
+backend:
+  image: {repository: ghcr.io/vimalyad/stockpilot-devops-capstone-backend, tag: development, pullPolicy: IfNotPresent}
+  replicas: 2
+  resources:
+    requests: {cpu: 100m, memory: 128Mi}
+    limits: {cpu: "1", memory: 512Mi}
+frontend:
+  image: {repository: ghcr.io/vimalyad/stockpilot-devops-capstone-frontend, tag: development, pullPolicy: IfNotPresent}
+  replicas: 2
+  resources:
+    requests: {cpu: 50m, memory: 32Mi}
+    limits: {cpu: 500m, memory: 128Mi}
+worker:
+  replicas: 2
+  resources:
+    requests: {cpu: 100m, memory: 192Mi}
+    limits: {cpu: "1", memory: 512Mi}
+scheduler:
+  enabled: true
+postgres:
+  image: postgres:17-alpine
+  storage: 5Gi
+  storageClass: ""
+  resources:
+    requests: {cpu: 100m, memory: 128Mi}
+    limits: {cpu: "1", memory: 512Mi}
+redis:
+  image: redis:7.4-alpine
+  storage: 1Gi
+  resources:
+    requests: {cpu: 50m, memory: 32Mi}
+    limits: {cpu: 500m, memory: 128Mi}
+secrets:
+  existingSecret: stockpilot-secrets
+imagePullSecrets: []
+ingress:
+  enabled: true
+  className: nginx
+  host: stockpilot.local
+  tls: []
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 8
+  targetCPUUtilizationPercentage: 70
+networkPolicy:
+  enabled: true
+monitoring:
+  enabled: false
+  release: monitoring
+seedDemo: true

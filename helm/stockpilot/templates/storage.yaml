@@ -1,0 +1,89 @@
+{{- range $component := list "postgres" "redis" }}
+{{- $postgres := eq $component "postgres" }}
+{{- $values := index $.Values $component }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $component }}
+  annotations: {argocd.argoproj.io/sync-wave: "-2"}
+spec:
+  clusterIP: None
+  selector: {app.kubernetes.io/name: stockpilot, app.kubernetes.io/component: {{ $component }}}
+  ports:
+    - name: tcp
+      port: {{ if $postgres }}5432{{ else }}6379{{ end }}
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ $component }}
+  annotations: {argocd.argoproj.io/sync-wave: "-2"}
+spec:
+  serviceName: {{ $component }}
+  replicas: 1
+  selector:
+    matchLabels: {app.kubernetes.io/name: stockpilot, app.kubernetes.io/component: {{ $component }}}
+  template:
+    metadata:
+      labels: {app.kubernetes.io/name: stockpilot, app.kubernetes.io/component: {{ $component }}}
+    spec:
+      serviceAccountName: stockpilot
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        runAsGroup: 999
+        fsGroup: 999
+        seccompProfile: {type: RuntimeDefault}
+      containers:
+        - name: {{ $component }}
+          image: {{ $values.image }}
+          securityContext:
+            {{- include "stockpilot.security" $ | nindent 12 }}
+          {{- if $postgres }}
+          envFrom:
+            {{- include "stockpilot.env" $ | nindent 12 }}
+          env:
+            - {name: PGDATA, value: /var/lib/postgresql/data/pgdata}
+          {{- else }}
+          args: [redis-server, --appendonly, "yes"]
+          {{- end }}
+          ports:
+            - {name: tcp, containerPort: {{ if $postgres }}5432{{ else }}6379{{ end }}}
+          startupProbe:
+            exec:
+              command: {{ if $postgres }}[pg_isready, -U, stockpilot, -d, stockpilot]{{ else }}[redis-cli, ping]{{ end }}
+            failureThreshold: 40
+            periodSeconds: 3
+          readinessProbe:
+            exec:
+              command: {{ if $postgres }}[pg_isready, -U, stockpilot, -d, stockpilot]{{ else }}[redis-cli, ping]{{ end }}
+            periodSeconds: 5
+          livenessProbe:
+            exec:
+              command: {{ if $postgres }}[pg_isready, -U, stockpilot, -d, stockpilot]{{ else }}[redis-cli, ping]{{ end }}
+            periodSeconds: 20
+          resources:
+            {{- toYaml $values.resources | nindent 12 }}
+          volumeMounts:
+            - {name: data, mountPath: {{ if $postgres }}/var/lib/postgresql/data{{ else }}/data{{ end }}}
+            - {name: tmp, mountPath: /tmp}
+            {{- if $postgres }}
+            - {name: socket, mountPath: /var/run/postgresql}
+            {{- end }}
+      volumes:
+        - {name: tmp, emptyDir: {}}
+        {{- if $postgres }}
+        - {name: socket, emptyDir: {}}
+        {{- end }}
+  volumeClaimTemplates:
+    - metadata: {name: data}
+      spec:
+        accessModes: [ReadWriteOnce]
+        {{- if $.Values.postgres.storageClass }}
+        storageClassName: {{ $.Values.postgres.storageClass }}
+        {{- end }}
+        resources:
+          requests: {storage: {{ $values.storage }}}
+{{- end }}

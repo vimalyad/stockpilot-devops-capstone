@@ -1,0 +1,93 @@
+{{- range $component := list "backend" "frontend" "worker" "scheduler" }}
+{{- if or (ne $component "scheduler") $.Values.scheduler.enabled }}
+{{- $isBackend := ne $component "frontend" }}
+{{- $values := index $.Values $component }}
+{{- $image := $.Values.frontend.image }}
+{{- if $isBackend }}{{ $image = $.Values.backend.image }}{{ end }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $component }}
+  labels:
+    {{- include "stockpilot.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: {{ $component }}
+spec:
+  {{- if eq $component "scheduler" }}
+  replicas: 1
+  strategy: {type: Recreate}
+  {{- else }}
+  replicas: {{ $values.replicas }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate: {maxUnavailable: 0, maxSurge: 1}
+  {{- end }}
+  selector:
+    matchLabels: {app.kubernetes.io/name: stockpilot, app.kubernetes.io/component: {{ $component }}}
+  template:
+    metadata:
+      labels: {app.kubernetes.io/name: stockpilot, app.kubernetes.io/component: {{ $component }}}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/config.yaml") $ | sha256sum }}
+    spec:
+      serviceAccountName: stockpilot
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 60
+      {{- with $.Values.imagePullSecrets }}
+      imagePullSecrets: {{ toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: {{ if $isBackend }}10001{{ else }}101{{ end }}
+        runAsGroup: {{ if $isBackend }}10001{{ else }}101{{ end }}
+        seccompProfile: {type: RuntimeDefault}
+      {{- if $isBackend }}
+      initContainers:
+        {{- include "stockpilot.waitSchema" $ | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ $component }}
+          image: "{{ $image.repository }}:{{ $image.tag }}"
+          imagePullPolicy: {{ $image.pullPolicy }}
+          securityContext:
+            {{- include "stockpilot.security" $ | nindent 12 }}
+          {{- if $isBackend }}
+          envFrom:
+            {{- include "stockpilot.env" $ | nindent 12 }}
+          {{- end }}
+          {{- if eq $component "worker" }}
+          command: [celery, -A, "app.tasks:celery", worker, --loglevel=info, --concurrency=2]
+          readinessProbe:
+            exec:
+              command: [sh, -ec, "celery -A app.tasks:celery inspect ping -d celery@$HOSTNAME --timeout 4 | grep -q pong"]
+            initialDelaySeconds: 20
+            periodSeconds: 30
+            timeoutSeconds: 8
+          {{- else if eq $component "scheduler" }}
+          command: [celery, -A, "app.tasks:celery", beat, --loglevel=info, --schedule=/tmp/celerybeat-schedule]
+          {{- else }}
+          ports:
+            - name: http
+              containerPort: {{ if $isBackend }}8000{{ else }}8080{{ end }}
+          startupProbe:
+            httpGet: {path: /health, port: http}
+            failureThreshold: 30
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: {path: /health, port: http}
+            periodSeconds: 10
+          readinessProbe:
+            httpGet: {path: {{ if $isBackend }}/ready{{ else }}/health{{ end }}, port: http}
+            periodSeconds: 5
+          {{- end }}
+          resources:
+            {{- if eq $component "scheduler" }}
+            requests: {cpu: 50m, memory: 128Mi}
+            limits: {cpu: 500m, memory: 256Mi}
+            {{- else }}
+            {{- toYaml $values.resources | nindent 12 }}
+            {{- end }}
+          volumeMounts: [{name: tmp, mountPath: /tmp}]
+      volumes: [{name: tmp, emptyDir: {}}]
+{{- end }}
+{{- end }}

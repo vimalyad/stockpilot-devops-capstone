@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: stockpilot-smoke
+  annotations:
+    helm.sh/hook: test
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  restartPolicy: Never
+  automountServiceAccountToken: false
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 10001
+    runAsGroup: 10001
+    seccompProfile: {type: RuntimeDefault}
+  containers:
+    - name: smoke
+      image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
+      imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
+      command: [python, -c]
+      args:
+        - |
+          import json,urllib.request
+          for url in ['http://backend:8000/ready','http://backend:8000/api/dashboard','http://backend:8000/api/products','http://frontend:8080/']:
+              with urllib.request.urlopen(url,timeout=10) as response:
+                  assert response.status == 200, url
+                  print(url, response.status)
+      securityContext:
+        {{- include "stockpilot.security" . | nindent 8 }}
+      resources:
+        requests: {cpu: 25m, memory: 32Mi}
+        limits: {cpu: 250m, memory: 128Mi}
