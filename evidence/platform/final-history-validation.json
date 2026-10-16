@@ -1,0 +1,11 @@
+{
+  "recorded_at": "2026-10-16T17:59:33.775819+00:00",
+  "commits_preserved": 20,
+  "final_tree_preserved": true,
+  "single_main_reference": true,
+  "historical_authored_text_review": "passed",
+  "commit_metadata_review": "passed",
+  "presentation_xml_review": "passed",
+  "gitleaks_exit_code": 0,
+  "gitleaks_findings": 0
+}

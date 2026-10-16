@@ -12,7 +12,7 @@ Implemented configuration, successful execution and environment-dependent work a
 | Frontend | 13 component tests, TypeScript checking and production build passed | jsdom/React Testing Library; JS 190.25 kB (57.87 kB gzip), CSS 32.94 kB (8.05 kB gzip). No browser interaction capture. |
 | Helm/Compose | Helm lint/render and Compose configuration passed | No images built, containers started or Kubernetes release installed. |
 | IaC security | [Platform evidence](../evidence/platform/): Trivy 0 unexcepted HIGH/CRITICAL findings across 14 configuration files | Two documented EKS demo exceptions in `security/README.md`; scan is specific to these rules and source. |
-| Secret history | [Platform evidence](../evidence/platform/): Gitleaks 0 leaks in 12 commits | History at capture time; later commits need rescanning. |
+| Secret history | [Final history validation](../evidence/platform/final-history-validation.json): Gitleaks 0 leaks across 20 history commits before the evidence update | Source history checked after cleanup; audit commit checked separately. |
 | Workflow | actionlint passed | No hosted run or registry publication claimed. |
 | Terraform | Formatting and provider initialization passed | Validate blocked by sandbox IPC/socket denial; no plan/apply. |
 | Presentation | [18-slide editable PowerPoint](presentation/StockPilot-Capstone.pptx), [PDF](presentation/StockPilot-Capstone.pdf) | Speaker notes and original explanatory diagrams. |
