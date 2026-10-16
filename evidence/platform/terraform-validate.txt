@@ -1,0 +1,22 @@
+
+Error: Failed to load plugin schemas
+
+Error while loading schemas for plugin components: Failed to obtain provider
+schema: Could not load the schema for provider
+registry.terraform.io/hashicorp/aws: failed to instantiate provider
+"registry.terraform.io/hashicorp/aws" to obtain schema: Unrecognized remote
+plugin message: 
+Failed to read any lines from plugin's stdout
+This usually means
+  the plugin was not compiled for this architecture,
+  the plugin is missing dynamic-link libraries necessary to run,
+  the plugin is not executable by this process due to file permissions, or
+  the plugin failed to negotiate the initial go-plugin protocol handshake
+
+Additional notes about plugin:
+  Path: .terraform/providers/registry.terraform.io/hashicorp/aws/6.67.0/linux_amd64/terraform-provider-aws_v6.67.0_x5
+  Mode: -rwxr-xr-x
+  Owner: 1000 [vimal2907] (current: 1000 [vimal2907])
+  Group: 1000 [vimal2907] (current: 1000 [vimal2907])
+  ELF architecture: EM_X86_64 (current architecture: amd64)
+..

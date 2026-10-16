@@ -2,7 +2,7 @@ name: StockPilot delivery
 on:
   push:
     branches: [main]
-    paths-ignore: ['**.md', 'docs/**', 'gitops/release.yaml']
+    paths-ignore: ['**.md', 'docs/**', 'demo/**', 'screenshots/**', 'evidence/**', 'gitops/release.yaml']
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -101,7 +101,7 @@ jobs:
           .tools/bin/terraform -chdir=terraform fmt -check
           .tools/bin/terraform -chdir=terraform init -backend=false
           .tools/bin/terraform -chdir=terraform validate
-          .tools/bin/trivy config --severity HIGH,CRITICAL --exit-code 1 --ignorefile security/.trivyignore --format json --output reports/iac.json --skip-dirs frontend/node_modules,backend/.venv,.venv,.security,.tools,docs,troubleshooting .
+          .tools/bin/trivy config --severity HIGH,CRITICAL --exit-code 1 --ignorefile security/.trivyignore --format json --output reports/iac.json --skip-dirs frontend/node_modules,backend/.venv,.venv,.security,.tools,docs,troubleshooting,evidence,demo,screenshots .
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         if: always()
         with: {name: infrastructure-validation, path: reports/, retention-days: 14}

@@ -25,6 +25,6 @@ variable "node_type" {
 }
 variable "enable_nat_gateway" {
   type        = bool
-  default     = true
+  default     = false
   description = "True: workers in private subnets through one billed NAT. False: demo workers in public subnets, no NAT bill."
 }

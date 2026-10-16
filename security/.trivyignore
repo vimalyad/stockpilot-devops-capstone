@@ -3,3 +3,7 @@
 # public_access_cidrs is constrained to one required IPv4 /32; private API remains enabled.
 # Production deployments should disable public access and use a private operator path.
 AWS-0040
+# AWS-0164: Default NAT-free demo mode requires public worker IPv4 for image pulls.
+# Node ingress remains restricted by EKS security groups; no SSH ingress is added.
+# enable_nat_gateway=true moves workers to private subnets and disables automatic public IPs.
+AWS-0164

@@ -1,0 +1,138 @@
+{
+  "SchemaVersion": 2,
+  "Trivy": {
+    "Version": "0.75.0"
+  },
+  "ReportID": "01a145cf-73e2-7851-aae4-c2567991d82b",
+  "CreatedAt": "2026-10-16T23:13:05.954549662+05:30",
+  "ArtifactID": "sha256:6070a19294cc2b242d1a892715d4f5e7d692d182393c153dbeb03b394bfe2781",
+  "ArtifactName": ".",
+  "ArtifactType": "repository",
+  "Metadata": {
+    "Branch": "main",
+    "Commit": "20ef9c728cefa09cdf345c4a1a0312a34ac8c384",
+    "CommitMsg": "Build StockPilot inventory and procurement workspace",
+    "Author": "Vimal Kumar Yadav \u003c174954713+vimalyad@users.noreply.github.com\u003e",
+    "Committer": "Vimal Kumar Yadav \u003c174954713+vimalyad@users.noreply.github.com\u003e"
+  },
+  "Results": [
+    {
+      "Target": "backend/Dockerfile",
+      "Class": "config",
+      "Type": "dockerfile",
+      "MisconfSummary": {
+        "Successes": 20,
+        "Failures": 0
+      }
+    },
+    {
+      "Target": "frontend/Dockerfile",
+      "Class": "config",
+      "Type": "dockerfile",
+      "MisconfSummary": {
+        "Successes": 20,
+        "Failures": 0
+      }
+    },
+    {
+      "Target": "gitops/application.yaml",
+      "Class": "config",
+      "Type": "kubernetes",
+      "MisconfSummary": {
+        "Successes": 10,
+        "Failures": 0
+      }
+    },
+    {
+      "Target": "gitops/project.yaml",
+      "Class": "config",
+      "Type": "kubernetes",
+      "MisconfSummary": {
+        "Successes": 10,
+        "Failures": 0
+      }
+    },
+    {
+      "Target": "helm/stockpilot/templates/config.yaml",
+      "Class": "config",
+      "Type": "helm",
+      "MisconfSummary": {
+        "Successes": 11,
+        "Failures": 0
+      }
+    },
+    {
+      "Target": "helm/stockpilot/templates/deployments.yaml",
+      "Class": "config",
+      "Type": "helm",
+      "MisconfSummary": {
+        "Successes": 22,
+        "Failures": 0
+      }
+    },
+    {
+      "Target": "helm/stockpilot/templates/migration.yaml",
+      "Class": "config",
+      "Type": "helm",
+      "MisconfSummary": {
+        "Successes": 22,
+        "Failures": 0
+      }
+    },
+    {
+      "Target": "helm/stockpilot/templates/network.yaml",
+      "Class": "config",
+      "Type": "helm",
+      "MisconfSummary": {
+        "Successes": 11,
+        "Failures": 0
+      }
+    },
+    {
+      "Target": "helm/stockpilot/templates/storage.yaml",
+      "Class": "config",
+      "Type": "helm",
+      "MisconfSummary": {
+        "Successes": 23,
+        "Failures": 0
+      }
+    },
+    {
+      "Target": "k8s/namespace.yaml",
+      "Class": "config",
+      "Type": "kubernetes",
+      "MisconfSummary": {
+        "Successes": 10,
+        "Failures": 0
+      }
+    },
+    {
+      "Target": "k8s/storageclass-eks.yaml",
+      "Class": "config",
+      "Type": "kubernetes",
+      "MisconfSummary": {
+        "Successes": 10,
+        "Failures": 0
+      }
+    },
+    {
+      "Target": "terraform",
+      "Class": "config",
+      "Type": "terraform",
+      "MisconfSummary": {
+        "Successes": 33,
+        "Failures": 0
+      }
+    },
+    {
+      "Target": "terraform/cluster.tf",
+      "Class": "config",
+      "Type": "terraform"
+    },
+    {
+      "Target": "terraform/network.tf",
+      "Class": "config",
+      "Type": "terraform"
+    }
+  ]
+}

@@ -3,4 +3,4 @@ cluster_name = "vimal-stockpilot-capstone"
 operator_cidr = "203.0.113.10/32" # Replace with your actual public IPv4.
 kubernetes_version = "1.35"
 node_type = "t3.medium"
-enable_nat_gateway = true
+enable_nat_gateway = false

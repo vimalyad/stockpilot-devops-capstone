@@ -1,0 +1,162 @@
+{
+  "recorded_at": "2026-10-16T17:43:07.365918+00:00",
+  "checks": [
+    {
+      "check": "helm-lint",
+      "command": [
+        "/var/home/vimal2907/assignment/devops-assignment/.tools/bin/helm",
+        "lint",
+        "helm/stockpilot",
+        "--set",
+        "monitoring.enabled=true"
+      ],
+      "exit_code": 0
+    },
+    {
+      "check": "helm-template",
+      "command": [
+        "/var/home/vimal2907/assignment/devops-assignment/.tools/bin/helm",
+        "template",
+        "stockpilot",
+        "helm/stockpilot",
+        "--namespace",
+        "stockpilot",
+        "--set",
+        "monitoring.enabled=true"
+      ],
+      "exit_code": 0
+    },
+    {
+      "check": "actionlint",
+      "command": [
+        "/var/home/vimal2907/assignment/devops-assignment/.tools/bin/actionlint",
+        ".github/workflows/ci.yml"
+      ],
+      "exit_code": 0
+    },
+    {
+      "check": "compose-config",
+      "command": [
+        "docker",
+        "compose",
+        "config",
+        "--quiet"
+      ],
+      "exit_code": 0
+    },
+    {
+      "check": "terraform-format",
+      "command": [
+        "/var/home/vimal2907/assignment/devops-assignment/.tools/bin/terraform",
+        "-chdir=terraform",
+        "fmt",
+        "-check"
+      ],
+      "exit_code": 0
+    },
+    {
+      "check": "terraform-init",
+      "command": [
+        "/var/home/vimal2907/assignment/devops-assignment/.tools/bin/terraform",
+        "-chdir=terraform",
+        "init",
+        "-backend=false",
+        "-no-color",
+        "-plugin-dir=/var/home/vimal2907/assignment/devops-assignment/.tools/terraform-plugin-cache"
+      ],
+      "exit_code": 0
+    },
+    {
+      "check": "terraform-validate",
+      "command": [
+        "/var/home/vimal2907/assignment/devops-assignment/.tools/bin/terraform",
+        "-chdir=terraform",
+        "validate",
+        "-no-color"
+      ],
+      "exit_code": 1
+    },
+    {
+      "check": "trivy-config",
+      "command": [
+        "/var/home/vimal2907/assignment/devops-assignment/repositories/typeahead-devops-capstone/.tools/bin/trivy",
+        "config",
+        "--cache-dir",
+        "/tmp/stockpilot-trivy",
+        "--skip-check-update",
+        "--skip-version-check",
+        "--disable-telemetry",
+        "--severity",
+        "HIGH,CRITICAL",
+        "--exit-code",
+        "1",
+        "--ignorefile",
+        "security/.trivyignore",
+        "--skip-dirs",
+        "frontend/node_modules,backend/.venv,.venv,.security,.tools,docs,troubleshooting,evidence,demo,screenshots",
+        "--format",
+        "json",
+        "--output",
+        "evidence/platform/trivy-config.json",
+        "."
+      ],
+      "exit_code": 0
+    },
+    {
+      "check": "gitleaks",
+      "command": [
+        "/var/home/vimal2907/assignment/devops-assignment/repositories/typeahead-devops-capstone/.tools/bin/gitleaks",
+        "git",
+        ".",
+        "--redact",
+        "--log-opts=--all",
+        "--report-format",
+        "json",
+        "--report-path",
+        "evidence/platform/gitleaks.json"
+      ],
+      "exit_code": 0
+    },
+    {
+      "check": "shell-run-containers",
+      "command": [
+        "bash",
+        "-n",
+        "/var/home/vimal2907/assignment/devops-assignment/repositories/stockpilot-devops-capstone/scripts/run-containers.sh"
+      ],
+      "exit_code": 0
+    },
+    {
+      "check": "shell-create-secret",
+      "command": [
+        "bash",
+        "-n",
+        "/var/home/vimal2907/assignment/devops-assignment/repositories/stockpilot-devops-capstone/scripts/create-secret.sh"
+      ],
+      "exit_code": 0
+    },
+    {
+      "check": "shell-ci-deploy",
+      "command": [
+        "bash",
+        "-n",
+        "/var/home/vimal2907/assignment/devops-assignment/repositories/stockpilot-devops-capstone/scripts/ci-deploy.sh"
+      ],
+      "exit_code": 0
+    },
+    {
+      "check": "shell-challenge",
+      "command": [
+        "bash",
+        "-n",
+        "/var/home/vimal2907/assignment/devops-assignment/repositories/stockpilot-devops-capstone/troubleshooting/challenge.sh"
+      ],
+      "exit_code": 0
+    }
+  ],
+  "limits": [
+    "Terraform provider validation is blocked by restricted local IPC/socket creation.",
+    "Trivy uses embedded configuration rules with documented AWS-0040 and AWS-0164 IaC exceptions; no container/CVE scan was run.",
+    "No Docker containers, Kubernetes cluster, remote CI pipeline, GHCR publication or AWS resources were deployed."
+  ]
+}

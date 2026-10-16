@@ -1,0 +1,61 @@
+{
+  "resources": 24,
+  "workloads": [
+    {
+      "kind": "Deployment",
+      "name": "backend",
+      "nonroot": true,
+      "read_only": true,
+      "bounded_resources": true
+    },
+    {
+      "kind": "Deployment",
+      "name": "frontend",
+      "nonroot": true,
+      "read_only": true,
+      "bounded_resources": true
+    },
+    {
+      "kind": "Deployment",
+      "name": "worker",
+      "nonroot": true,
+      "read_only": true,
+      "bounded_resources": true
+    },
+    {
+      "kind": "Deployment",
+      "name": "scheduler",
+      "nonroot": true,
+      "read_only": true,
+      "bounded_resources": true
+    },
+    {
+      "kind": "StatefulSet",
+      "name": "postgres",
+      "nonroot": true,
+      "read_only": true,
+      "bounded_resources": true
+    },
+    {
+      "kind": "StatefulSet",
+      "name": "redis",
+      "nonroot": true,
+      "read_only": true,
+      "bounded_resources": true
+    },
+    {
+      "kind": "Job",
+      "name": "stockpilot-migrate-1",
+      "nonroot": true,
+      "read_only": true,
+      "bounded_resources": true
+    },
+    {
+      "kind": "Pod",
+      "name": "stockpilot-smoke",
+      "nonroot": true,
+      "read_only": true,
+      "bounded_resources": true
+    }
+  ]
+}

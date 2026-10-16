@@ -1,0 +1,6 @@
+2026-10-16T23:13:03+05:30	INFO	[misconfig] Misconfiguration scanning is enabled
+2026-10-16T23:13:03+05:30	INFO	[checks-client] No downloadable checks were loaded as --skip-check-update is enabled, loading from existing cache...
+2026-10-16T23:13:03+05:30	ERROR	[misconfig] Falling back to embedded checks	err="failed to check cache: cache does not exist at \"/tmp/stockpilot-trivy/policy/content\""
+2026-10-16T23:13:04+05:30	INFO	[terraform scanner] Scanning root module	file_path="terraform"
+2026-10-16T23:13:04+05:30	WARN	[terraform parser] Variable values were not found in the environment or variable files. Evaluating may not work correctly.	module="root" variables="operator_cidr"
+2026-10-16T23:13:05+05:30	INFO	Detected config files	num=14

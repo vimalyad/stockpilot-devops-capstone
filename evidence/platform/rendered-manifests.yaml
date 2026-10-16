@@ -1,0 +1,1100 @@
+---
+# Source: stockpilot/templates/network.yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: {name: database-ingress}
+spec:
+  podSelector:
+    matchLabels: {app.kubernetes.io/name: stockpilot, app.kubernetes.io/component: postgres}
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels: {app.kubernetes.io/name: stockpilot}
+            matchExpressions:
+              - {key: app.kubernetes.io/component, operator: In, values: [backend, worker, scheduler, migrate]}
+      ports: [{protocol: TCP, port: 5432}]
+---
+# Source: stockpilot/templates/network.yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: {name: redis-ingress}
+spec:
+  podSelector:
+    matchLabels: {app.kubernetes.io/name: stockpilot, app.kubernetes.io/component: redis}
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels: {app.kubernetes.io/name: stockpilot}
+            matchExpressions:
+              - {key: app.kubernetes.io/component, operator: In, values: [backend, worker, scheduler]}
+      ports: [{protocol: TCP, port: 6379}]
+---
+# Source: stockpilot/templates/network.yaml
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata: {name: backend}
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels: {app.kubernetes.io/name: stockpilot, app.kubernetes.io/component: backend}
+---
+# Source: stockpilot/templates/network.yaml
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata: {name: frontend}
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels: {app.kubernetes.io/name: stockpilot, app.kubernetes.io/component: frontend}
+---
+# Source: stockpilot/templates/config.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: stockpilot
+  labels:
+    app.kubernetes.io/name: stockpilot
+    app.kubernetes.io/instance: stockpilot
+    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: stockpilot-1.0.0
+  annotations:
+    argocd.argoproj.io/sync-wave: "-3"
+automountServiceAccountToken: false
+---
+# Source: stockpilot/templates/config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: stockpilot-config
+  annotations:
+    argocd.argoproj.io/sync-wave: "-3"
+  labels:
+    app.kubernetes.io/name: stockpilot
+    app.kubernetes.io/instance: stockpilot
+    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: stockpilot-1.0.0
+data:
+  REDIS_URL: redis://redis:6379/0
+  APP_VERSION: "development"
+  POSTGRES_USER: stockpilot
+  POSTGRES_DB: stockpilot
+---
+# Source: stockpilot/templates/monitoring.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: stockpilot-dashboard
+  labels: {grafana_dashboard: "1"}
+data:
+  stockpilot.json: |
+    {
+      "uid": "stockpilot",
+      "title": "StockPilot \u00b7 Inventory Operations",
+      "tags": [
+        "stockpilot"
+      ],
+      "schemaVersion": 39,
+      "version": 1,
+      "refresh": "15s",
+      "time": {
+        "from": "now-30m",
+        "to": "now"
+      },
+      "templating": {
+        "list": [
+          {
+            "name": "namespace",
+            "type": "constant",
+            "query": "stockpilot",
+            "current": {
+              "text": "stockpilot",
+              "value": "stockpilot"
+            },
+            "hide": 0
+          }
+        ]
+      },
+      "panels": [
+        {
+          "id": 1,
+          "title": "API requests / second",
+          "type": "timeseries",
+          "gridPos": {
+            "x": 0,
+            "y": 0,
+            "w": 12,
+            "h": 8
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum by (route) (rate(stockpilot_http_requests_total{namespace=\"$namespace\"}[2m]))",
+              "legendFormat": "{{route}}{{status}}{{pod}}{{deployment}}{{persistentvolumeclaim}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "reqps"
+            },
+            "overrides": []
+          }
+        },
+        {
+          "id": 2,
+          "title": "API latency p95",
+          "type": "timeseries",
+          "gridPos": {
+            "x": 12,
+            "y": 0,
+            "w": 12,
+            "h": 8
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "histogram_quantile(0.95, sum by (le,route) (rate(stockpilot_http_request_duration_seconds_bucket{namespace=\"$namespace\"}[5m])))",
+              "legendFormat": "{{route}}{{status}}{{pod}}{{deployment}}{{persistentvolumeclaim}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s"
+            },
+            "overrides": []
+          }
+        },
+        {
+          "id": 3,
+          "title": "API responses by status",
+          "type": "timeseries",
+          "gridPos": {
+            "x": 0,
+            "y": 8,
+            "w": 12,
+            "h": 8
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum by (status) (rate(stockpilot_http_requests_total{namespace=\"$namespace\"}[5m]))",
+              "legendFormat": "{{route}}{{status}}{{pod}}{{deployment}}{{persistentvolumeclaim}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "reqps"
+            },
+            "overrides": []
+          }
+        },
+        {
+          "id": 4,
+          "title": "Backend scrape targets",
+          "type": "timeseries",
+          "gridPos": {
+            "x": 12,
+            "y": 8,
+            "w": 12,
+            "h": 8
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "up{namespace=\"$namespace\",service=\"backend\"}",
+              "legendFormat": "{{route}}{{status}}{{pod}}{{deployment}}{{persistentvolumeclaim}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short"
+            },
+            "overrides": []
+          }
+        },
+        {
+          "id": 5,
+          "title": "Container CPU cores",
+          "type": "timeseries",
+          "gridPos": {
+            "x": 0,
+            "y": 16,
+            "w": 12,
+            "h": 8
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum by (pod) (rate(container_cpu_usage_seconds_total{namespace=\"$namespace\",container!=\"\",container!=\"POD\"}[5m]))",
+              "legendFormat": "{{route}}{{status}}{{pod}}{{deployment}}{{persistentvolumeclaim}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "cores"
+            },
+            "overrides": []
+          }
+        },
+        {
+          "id": 6,
+          "title": "Container memory",
+          "type": "timeseries",
+          "gridPos": {
+            "x": 12,
+            "y": 16,
+            "w": 12,
+            "h": 8
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum by (pod) (container_memory_working_set_bytes{namespace=\"$namespace\",container!=\"\",container!=\"POD\"})",
+              "legendFormat": "{{route}}{{status}}{{pod}}{{deployment}}{{persistentvolumeclaim}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "bytes"
+            },
+            "overrides": []
+          }
+        },
+        {
+          "id": 7,
+          "title": "Available deployment replicas",
+          "type": "timeseries",
+          "gridPos": {
+            "x": 0,
+            "y": 24,
+            "w": 12,
+            "h": 8
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "kube_deployment_status_replicas_available{namespace=\"$namespace\"}",
+              "legendFormat": "{{route}}{{status}}{{pod}}{{deployment}}{{persistentvolumeclaim}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short"
+            },
+            "overrides": []
+          }
+        },
+        {
+          "id": 8,
+          "title": "Persistent volume usage",
+          "type": "timeseries",
+          "gridPos": {
+            "x": 12,
+            "y": 24,
+            "w": 12,
+            "h": 8
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "kubelet_volume_stats_used_bytes{namespace=\"$namespace\"} / kubelet_volume_stats_capacity_bytes{namespace=\"$namespace\"} * 100",
+              "legendFormat": "{{route}}{{status}}{{pod}}{{deployment}}{{persistentvolumeclaim}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent"
+            },
+            "overrides": []
+          }
+        }
+      ]
+    }
+---
+# Source: stockpilot/templates/network.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+  labels:
+    app.kubernetes.io/name: stockpilot
+    app.kubernetes.io/instance: stockpilot
+    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: stockpilot-1.0.0
+    app.kubernetes.io/component: backend
+spec:
+  type: ClusterIP
+  selector: {app.kubernetes.io/name: stockpilot, app.kubernetes.io/component: backend}
+  ports:
+    - {name: http, port: 8000, targetPort: http}
+---
+# Source: stockpilot/templates/network.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  labels:
+    app.kubernetes.io/name: stockpilot
+    app.kubernetes.io/instance: stockpilot
+    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: stockpilot-1.0.0
+    app.kubernetes.io/component: frontend
+spec:
+  type: ClusterIP
+  selector: {app.kubernetes.io/name: stockpilot, app.kubernetes.io/component: frontend}
+  ports:
+    - {name: http, port: 8080, targetPort: http}
+---
+# Source: stockpilot/templates/storage.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  annotations: {argocd.argoproj.io/sync-wave: "-2"}
+spec:
+  clusterIP: None
+  selector: {app.kubernetes.io/name: stockpilot, app.kubernetes.io/component: postgres}
+  ports:
+    - name: tcp
+      port: 5432
+---
+# Source: stockpilot/templates/storage.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  annotations: {argocd.argoproj.io/sync-wave: "-2"}
+spec:
+  clusterIP: None
+  selector: {app.kubernetes.io/name: stockpilot, app.kubernetes.io/component: redis}
+  ports:
+    - name: tcp
+      port: 6379
+---
+# Source: stockpilot/templates/deployments.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  labels:
+    app.kubernetes.io/name: stockpilot
+    app.kubernetes.io/instance: stockpilot
+    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: stockpilot-1.0.0
+    app.kubernetes.io/component: backend
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate: {maxUnavailable: 0, maxSurge: 1}
+  selector:
+    matchLabels: {app.kubernetes.io/name: stockpilot, app.kubernetes.io/component: backend}
+  template:
+    metadata:
+      labels: {app.kubernetes.io/name: stockpilot, app.kubernetes.io/component: backend}
+      annotations:
+        checksum/config: c4450cb96ba5b692ac050dde907b5c090e7d46a3be500839fd489eb91eab1dae
+    spec:
+      serviceAccountName: stockpilot
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 60
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile: {type: RuntimeDefault}
+      initContainers:
+        - name: wait-for-schema
+          image: "ghcr.io/vimalyad/stockpilot-devops-capstone-backend:development"
+          imagePullPolicy: IfNotPresent
+          command: [python, -c]
+          args:
+            - |
+              import time
+              from alembic.config import Config
+              from alembic.runtime.migration import MigrationContext
+              from alembic.script import ScriptDirectory
+              from app.database import engine
+              expected_heads = set(ScriptDirectory.from_config(Config("alembic.ini")).get_heads())
+              for attempt in range(120):
+                  try:
+                      with engine.connect() as connection:
+                          current_heads = set(MigrationContext.configure(connection).get_current_heads())
+                          if current_heads != expected_heads:
+                              raise RuntimeError("Database schema does not match this application release")
+                      break
+                  except Exception:
+                      time.sleep(2)
+              else:
+                  raise SystemExit("Database migrations did not become ready")
+          envFrom:
+            - configMapRef:
+                name: stockpilot-config
+            - secretRef:
+                name: stockpilot-secrets
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          resources:
+            requests: {cpu: 50m, memory: 64Mi}
+            limits: {cpu: 500m, memory: 256Mi}
+      containers:
+        - name: backend
+          image: "ghcr.io/vimalyad/stockpilot-devops-capstone-backend:development"
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          envFrom:
+            - configMapRef:
+                name: stockpilot-config
+            - secretRef:
+                name: stockpilot-secrets
+          ports:
+            - name: http
+              containerPort: 8000
+          startupProbe:
+            httpGet: {path: /health, port: http}
+            failureThreshold: 30
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: {path: /health, port: http}
+            periodSeconds: 10
+          readinessProbe:
+            httpGet: {path: /ready, port: http}
+            periodSeconds: 5
+          resources:
+            limits:
+              cpu: "1"
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          volumeMounts: [{name: tmp, mountPath: /tmp}]
+      volumes: [{name: tmp, emptyDir: {}}]
+---
+# Source: stockpilot/templates/deployments.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  labels:
+    app.kubernetes.io/name: stockpilot
+    app.kubernetes.io/instance: stockpilot
+    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: stockpilot-1.0.0
+    app.kubernetes.io/component: frontend
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate: {maxUnavailable: 0, maxSurge: 1}
+  selector:
+    matchLabels: {app.kubernetes.io/name: stockpilot, app.kubernetes.io/component: frontend}
+  template:
+    metadata:
+      labels: {app.kubernetes.io/name: stockpilot, app.kubernetes.io/component: frontend}
+      annotations:
+        checksum/config: c4450cb96ba5b692ac050dde907b5c090e7d46a3be500839fd489eb91eab1dae
+    spec:
+      serviceAccountName: stockpilot
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 60
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
+        runAsGroup: 101
+        fsGroup: 101
+        seccompProfile: {type: RuntimeDefault}
+      containers:
+        - name: frontend
+          image: "ghcr.io/vimalyad/stockpilot-devops-capstone-frontend:development"
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          ports:
+            - name: http
+              containerPort: 8080
+          startupProbe:
+            httpGet: {path: /health, port: http}
+            failureThreshold: 30
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: {path: /health, port: http}
+            periodSeconds: 10
+          readinessProbe:
+            httpGet: {path: /health, port: http}
+            periodSeconds: 5
+          resources:
+            limits:
+              cpu: 500m
+              memory: 128Mi
+            requests:
+              cpu: 50m
+              memory: 32Mi
+          volumeMounts: [{name: tmp, mountPath: /tmp}]
+      volumes: [{name: tmp, emptyDir: {}}]
+---
+# Source: stockpilot/templates/deployments.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker
+  labels:
+    app.kubernetes.io/name: stockpilot
+    app.kubernetes.io/instance: stockpilot
+    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: stockpilot-1.0.0
+    app.kubernetes.io/component: worker
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate: {maxUnavailable: 0, maxSurge: 1}
+  selector:
+    matchLabels: {app.kubernetes.io/name: stockpilot, app.kubernetes.io/component: worker}
+  template:
+    metadata:
+      labels: {app.kubernetes.io/name: stockpilot, app.kubernetes.io/component: worker}
+      annotations:
+        checksum/config: c4450cb96ba5b692ac050dde907b5c090e7d46a3be500839fd489eb91eab1dae
+    spec:
+      serviceAccountName: stockpilot
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 60
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile: {type: RuntimeDefault}
+      initContainers:
+        - name: wait-for-schema
+          image: "ghcr.io/vimalyad/stockpilot-devops-capstone-backend:development"
+          imagePullPolicy: IfNotPresent
+          command: [python, -c]
+          args:
+            - |
+              import time
+              from alembic.config import Config
+              from alembic.runtime.migration import MigrationContext
+              from alembic.script import ScriptDirectory
+              from app.database import engine
+              expected_heads = set(ScriptDirectory.from_config(Config("alembic.ini")).get_heads())
+              for attempt in range(120):
+                  try:
+                      with engine.connect() as connection:
+                          current_heads = set(MigrationContext.configure(connection).get_current_heads())
+                          if current_heads != expected_heads:
+                              raise RuntimeError("Database schema does not match this application release")
+                      break
+                  except Exception:
+                      time.sleep(2)
+              else:
+                  raise SystemExit("Database migrations did not become ready")
+          envFrom:
+            - configMapRef:
+                name: stockpilot-config
+            - secretRef:
+                name: stockpilot-secrets
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          resources:
+            requests: {cpu: 50m, memory: 64Mi}
+            limits: {cpu: 500m, memory: 256Mi}
+      containers:
+        - name: worker
+          image: "ghcr.io/vimalyad/stockpilot-devops-capstone-backend:development"
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          envFrom:
+            - configMapRef:
+                name: stockpilot-config
+            - secretRef:
+                name: stockpilot-secrets
+          command: [celery, -A, "app.tasks:celery", worker, --loglevel=info, --concurrency=2]
+          readinessProbe:
+            exec:
+              command: [sh, -ec, "celery -A app.tasks:celery inspect ping -d celery@$HOSTNAME --timeout 4 | grep -q pong"]
+            initialDelaySeconds: 20
+            periodSeconds: 30
+            timeoutSeconds: 8
+          resources:
+            limits:
+              cpu: "1"
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 192Mi
+          volumeMounts: [{name: tmp, mountPath: /tmp}]
+      volumes: [{name: tmp, emptyDir: {}}]
+---
+# Source: stockpilot/templates/deployments.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scheduler
+  labels:
+    app.kubernetes.io/name: stockpilot
+    app.kubernetes.io/instance: stockpilot
+    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: stockpilot-1.0.0
+    app.kubernetes.io/component: scheduler
+spec:
+  replicas: 1
+  strategy: {type: Recreate}
+  selector:
+    matchLabels: {app.kubernetes.io/name: stockpilot, app.kubernetes.io/component: scheduler}
+  template:
+    metadata:
+      labels: {app.kubernetes.io/name: stockpilot, app.kubernetes.io/component: scheduler}
+      annotations:
+        checksum/config: c4450cb96ba5b692ac050dde907b5c090e7d46a3be500839fd489eb91eab1dae
+    spec:
+      serviceAccountName: stockpilot
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 60
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile: {type: RuntimeDefault}
+      initContainers:
+        - name: wait-for-schema
+          image: "ghcr.io/vimalyad/stockpilot-devops-capstone-backend:development"
+          imagePullPolicy: IfNotPresent
+          command: [python, -c]
+          args:
+            - |
+              import time
+              from alembic.config import Config
+              from alembic.runtime.migration import MigrationContext
+              from alembic.script import ScriptDirectory
+              from app.database import engine
+              expected_heads = set(ScriptDirectory.from_config(Config("alembic.ini")).get_heads())
+              for attempt in range(120):
+                  try:
+                      with engine.connect() as connection:
+                          current_heads = set(MigrationContext.configure(connection).get_current_heads())
+                          if current_heads != expected_heads:
+                              raise RuntimeError("Database schema does not match this application release")
+                      break
+                  except Exception:
+                      time.sleep(2)
+              else:
+                  raise SystemExit("Database migrations did not become ready")
+          envFrom:
+            - configMapRef:
+                name: stockpilot-config
+            - secretRef:
+                name: stockpilot-secrets
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          resources:
+            requests: {cpu: 50m, memory: 64Mi}
+            limits: {cpu: 500m, memory: 256Mi}
+      containers:
+        - name: scheduler
+          image: "ghcr.io/vimalyad/stockpilot-devops-capstone-backend:development"
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          envFrom:
+            - configMapRef:
+                name: stockpilot-config
+            - secretRef:
+                name: stockpilot-secrets
+          command: [celery, -A, "app.tasks:celery", beat, --loglevel=info, --schedule=/tmp/celerybeat-schedule]
+          resources:
+            requests: {cpu: 50m, memory: 128Mi}
+            limits: {cpu: 500m, memory: 256Mi}
+          volumeMounts: [{name: tmp, mountPath: /tmp}]
+      volumes: [{name: tmp, emptyDir: {}}]
+---
+# Source: stockpilot/templates/network.yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata: {name: backend}
+spec:
+  scaleTargetRef: {apiVersion: apps/v1, kind: Deployment, name: backend}
+  minReplicas: 2
+  maxReplicas: 8
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 120
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target: {type: Utilization, averageUtilization: 70}
+---
+# Source: stockpilot/templates/network.yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata: {name: frontend}
+spec:
+  scaleTargetRef: {apiVersion: apps/v1, kind: Deployment, name: frontend}
+  minReplicas: 2
+  maxReplicas: 8
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 120
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target: {type: Utilization, averageUtilization: 70}
+---
+# Source: stockpilot/templates/storage.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  annotations: {argocd.argoproj.io/sync-wave: "-2"}
+spec:
+  serviceName: postgres
+  replicas: 1
+  selector:
+    matchLabels: {app.kubernetes.io/name: stockpilot, app.kubernetes.io/component: postgres}
+  template:
+    metadata:
+      labels: {app.kubernetes.io/name: stockpilot, app.kubernetes.io/component: postgres}
+    spec:
+      serviceAccountName: stockpilot
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 70
+        runAsGroup: 70
+        fsGroup: 70
+        seccompProfile: {type: RuntimeDefault}
+      containers:
+        - name: postgres
+          image: postgres:17-alpine
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          envFrom:
+            - configMapRef:
+                name: stockpilot-config
+            - secretRef:
+                name: stockpilot-secrets
+          env:
+            - {name: PGDATA, value: /var/lib/postgresql/data/pgdata}
+          ports:
+            - {name: tcp, containerPort: 5432}
+          startupProbe:
+            exec:
+              command: [pg_isready, -U, stockpilot, -d, stockpilot]
+            failureThreshold: 40
+            periodSeconds: 3
+          readinessProbe:
+            exec:
+              command: [pg_isready, -U, stockpilot, -d, stockpilot]
+            periodSeconds: 5
+          livenessProbe:
+            exec:
+              command: [pg_isready, -U, stockpilot, -d, stockpilot]
+            periodSeconds: 20
+          resources:
+            limits:
+              cpu: "1"
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          volumeMounts:
+            - {name: data, mountPath: /var/lib/postgresql/data}
+            - {name: tmp, mountPath: /tmp}
+            - {name: socket, mountPath: /var/run/postgresql}
+      volumes:
+        - {name: tmp, emptyDir: {}}
+        - {name: socket, emptyDir: {}}
+  volumeClaimTemplates:
+    - metadata: {name: data}
+      spec:
+        accessModes: [ReadWriteOnce]
+        resources:
+          requests: {storage: 5Gi}
+---
+# Source: stockpilot/templates/storage.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis
+  annotations: {argocd.argoproj.io/sync-wave: "-2"}
+spec:
+  serviceName: redis
+  replicas: 1
+  selector:
+    matchLabels: {app.kubernetes.io/name: stockpilot, app.kubernetes.io/component: redis}
+  template:
+    metadata:
+      labels: {app.kubernetes.io/name: stockpilot, app.kubernetes.io/component: redis}
+    spec:
+      serviceAccountName: stockpilot
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        runAsGroup: 999
+        fsGroup: 999
+        seccompProfile: {type: RuntimeDefault}
+      containers:
+        - name: redis
+          image: redis:7.4-alpine
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          args: [redis-server, --appendonly, "yes"]
+          ports:
+            - {name: tcp, containerPort: 6379}
+          startupProbe:
+            exec:
+              command: [redis-cli, ping]
+            failureThreshold: 40
+            periodSeconds: 3
+          readinessProbe:
+            exec:
+              command: [redis-cli, ping]
+            periodSeconds: 5
+          livenessProbe:
+            exec:
+              command: [redis-cli, ping]
+            periodSeconds: 20
+          resources:
+            limits:
+              cpu: 500m
+              memory: 128Mi
+            requests:
+              cpu: 50m
+              memory: 32Mi
+          volumeMounts:
+            - {name: data, mountPath: /data}
+            - {name: tmp, mountPath: /tmp}
+      volumes:
+        - {name: tmp, emptyDir: {}}
+  volumeClaimTemplates:
+    - metadata: {name: data}
+      spec:
+        accessModes: [ReadWriteOnce]
+        resources:
+          requests: {storage: 1Gi}
+---
+# Source: stockpilot/templates/migration.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: stockpilot-migrate-1
+  annotations:
+    argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+  labels:
+    app.kubernetes.io/name: stockpilot
+    app.kubernetes.io/instance: stockpilot
+    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: stockpilot-1.0.0
+spec:
+  backoffLimit: 3
+  activeDeadlineSeconds: 300
+  template:
+    metadata:
+      labels: {app.kubernetes.io/name: stockpilot, app.kubernetes.io/component: migrate}
+    spec:
+      restartPolicy: OnFailure
+      serviceAccountName: stockpilot
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile: {type: RuntimeDefault}
+      containers:
+        - name: migrate
+          image: "ghcr.io/vimalyad/stockpilot-devops-capstone-backend:development"
+          imagePullPolicy: IfNotPresent
+          command: [sh, -ec]
+          args: ["alembic upgrade head && python -m app.seed"]
+          envFrom:
+            - configMapRef:
+                name: stockpilot-config
+            - secretRef:
+                name: stockpilot-secrets
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          resources:
+            requests: {cpu: 50m, memory: 64Mi}
+            limits: {cpu: 500m, memory: 256Mi}
+          volumeMounts: [{name: tmp, mountPath: /tmp}]
+      volumes: [{name: tmp, emptyDir: {}}]
+---
+# Source: stockpilot/templates/network.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata: {name: stockpilot}
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: stockpilot.local
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service: {name: backend, port: {number: 8000}}
+          - path: /docs
+            pathType: Prefix
+            backend:
+              service: {name: backend, port: {number: 8000}}
+          - path: /openapi.json
+            pathType: Prefix
+            backend:
+              service: {name: backend, port: {number: 8000}}
+          - path: /
+            pathType: Prefix
+            backend:
+              service: {name: frontend, port: {number: 8080}}
+---
+# Source: stockpilot/templates/monitoring.yaml
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: stockpilot-alerts
+  labels: {release: monitoring}
+spec:
+  groups:
+    - name: stockpilot
+      rules:
+        - alert: StockPilotApiUnavailable
+          expr: sum(up{namespace="stockpilot",service="backend"}) == 0 or absent(up{namespace="stockpilot",service="backend"})
+          for: 2m
+          labels: {severity: critical}
+          annotations: {summary: "All StockPilot API scrape targets are down"}
+        - alert: StockPilotElevatedErrors
+          expr: sum(rate(stockpilot_http_requests_total{namespace="stockpilot",status=~"5.."}[5m])) / clamp_min(sum(rate(stockpilot_http_requests_total{namespace="stockpilot"}[5m])), 0.01) > 0.05
+          for: 5m
+          labels: {severity: warning}
+          annotations: {summary: "StockPilot server errors exceed 5 percent"}
+        - alert: StockPilotHighLatency
+          expr: histogram_quantile(0.95, sum by (le) (rate(stockpilot_http_request_duration_seconds_bucket{namespace="stockpilot"}[5m]))) > 1
+          for: 5m
+          labels: {severity: warning}
+          annotations: {summary: "StockPilot p95 API latency exceeds one second"}
+        - alert: StockPilotWorkerUnavailable
+          expr: kube_deployment_status_replicas_available{namespace="stockpilot",deployment="worker"} < 1
+          for: 3m
+          labels: {severity: warning}
+          annotations: {summary: "StockPilot has no available background workers"}
+---
+# Source: stockpilot/templates/monitoring.yaml
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: stockpilot
+  labels: {release: monitoring}
+spec:
+  selector:
+    matchLabels: {app.kubernetes.io/name: stockpilot, app.kubernetes.io/component: backend}
+  endpoints:
+    - {port: http, path: /metrics, interval: 15s, scrapeTimeout: 10s}
+---
+# Source: stockpilot/templates/tests/smoke.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: stockpilot-smoke
+  annotations:
+    helm.sh/hook: test
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  restartPolicy: Never
+  automountServiceAccountToken: false
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 10001
+    runAsGroup: 10001
+    seccompProfile: {type: RuntimeDefault}
+  containers:
+    - name: smoke
+      image: "ghcr.io/vimalyad/stockpilot-devops-capstone-backend:development"
+      imagePullPolicy: IfNotPresent
+      command: [python, -c]
+      args:
+        - |
+          import json,urllib.request
+          for url in ['http://backend:8000/ready','http://backend:8000/api/dashboard','http://backend:8000/api/products','http://frontend:8080/']:
+              with urllib.request.urlopen(url,timeout=10) as response:
+                  assert response.status == 200, url
+                  print(url, response.status)
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop: [ALL]
+      resources:
+        requests: {cpu: 25m, memory: 32Mi}
+        limits: {cpu: 250m, memory: 128Mi}

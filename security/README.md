@@ -10,4 +10,6 @@ This project has no authentication/RBAC or tenant isolation. Keep the demonstrat
 
 No successful remote scan or container deployment is claimed until an actual CI run is recorded. Base images and vulnerability databases change; a clean scan is specific to its run and does not establish permanent safety.
 
-The sole IaC exception is `AWS-0040`: EKS retains a public control-plane endpoint for operator access, restricted to the required single IPv4 `/32`; private access also remains enabled. This is not an Internet-wide API rule. Production should use a private operator path and disable public access. No CVE/image exceptions are configured.
+The first IaC exception is `AWS-0040`: EKS retains a public control-plane endpoint for operator access, restricted to the required single IPv4 `/32`; private access also remains enabled. This is not an Internet-wide API rule. Production should use a private operator path and disable public access. No CVE/image exceptions are configured.
+
+The second exception, `AWS-0164`, permits automatic public IPv4 addresses in the demo public subnets so workers can pull images without a NAT gateway charge. EKS node security groups still restrict inbound access and no SSH rule is added. Opting in to `enable_nat_gateway=true` places workers in private subnets and disables public address assignment. These two exceptions apply only to IaC, never to image CVEs.
