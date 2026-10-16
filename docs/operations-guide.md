@@ -2,7 +2,7 @@
 
 ## Local Python/Node development
 
-Use Python 3.12+ and Node compatible with the frontend lockfile. From the repository root:
+Use Python 3.12 on Linux x86_64 and Node 24. The dependency hashes target this platform; regenerate hashes before installing on a different platform. From the repository root:
 
 ```bash
 python3 -m venv .venv
@@ -31,6 +31,7 @@ The Vite proxy forwards API requests to port 8000. SQLite is a development conve
 PYTHONPATH=backend .venv/bin/pytest backend/tests --cov=backend/app --cov-report=term-missing
 cd frontend
 npm ci
+npm test
 npm run build
 ```
 
@@ -81,3 +82,13 @@ Follow [gitops/README.md](../gitops/README.md) to configure repository access an
 Follow [terraform/README.md](../terraform/README.md) with an authorized AWS account. Review the concrete plan before apply and verify current service versions, quotas and expected charges. Uninstall workloads and cloud load balancers before infrastructure teardown; deliberately handle retained database volumes. After destroy, check for remaining volumes, load balancers and logs.
 
 Use [the live demo runbook](../demo/RUNBOOK.md) for the product/platform sequence and [the screenshot index](../screenshots/README.md) for provenance. Capture only operations actually performed.
+
+## Publish the standalone repository
+
+The repository is currently local. GitHub publication was not completed because authenticated repository access is unavailable in this session. After signing into the intended account, run from the repository root:
+
+```bash
+gh repo create vimalyad/stockpilot-devops-capstone --public --source . --push
+```
+
+This preserves the existing meaningful development commits. Follow the resulting hosted workflow to its actual outcome; record the run URL before marking CI or registry publication verified.

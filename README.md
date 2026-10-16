@@ -127,10 +127,10 @@ Terraform defines a VPC, two public and two private subnets across two availabil
 
 | Area | Captured result | Boundary |
 |---|---|---|
-| Backend | **36 passed, 1 skipped; 97% coverage** | SQLite run; PostgreSQL concurrency case skipped |
+| Backend | **40 passed, 1 skipped; 97% coverage** | SQLite run; PostgreSQL concurrency case skipped |
 | Migrations/seed | Upgrade/downgrade/upgrade and idempotent seed verified | Local SQLite execution |
 | Source checks | Ruff passed; Bandit **0 findings**; Gitleaks **0 leaks** | Gitleaks scan covered 12 commits at capture time |
-| Frontend | **TypeScript + production build passed** | Browser execution not captured |
+| Frontend | **13 component tests + TypeScript + production build passed** | jsdom component checks; browser execution not captured |
 | Definitions | Helm lint/render, Compose config and actionlint passed; Trivy **0 unexcepted HIGH/CRITICAL** | Two documented demo IaC exceptions; no runtime deployment |
 | Terraform | Formatting and provider initialization passed | Validate blocked; no AWS plan/apply |
 | Presentation | 18-slide editable PPTX, PDF and narrated walkthrough | Original diagrams; no browser recording |

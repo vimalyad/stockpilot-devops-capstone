@@ -4,12 +4,12 @@ Implemented configuration, successful execution and environment-dependent work a
 
 | Check | Evidence/result | Scope |
 |---|---|---|
-| Backend tests | [pytest log](../evidence/pytest.txt), [JUnit XML](../evidence/pytest.xml): **36 passed, 1 skipped; 97% coverage** | Isolated SQLite. PostgreSQL concurrency case skipped. |
+| Backend tests | [pytest log](../evidence/pytest.txt), [JUnit XML](../evidence/pytest.xml): **40 passed, 1 skipped; 97% coverage** | Isolated SQLite. PostgreSQL concurrency case skipped. |
 | Ruff | [Output](../evidence/ruff.txt): passed | Backend source/test lint. |
 | Bandit | [JSON report](../evidence/bandit.json): **0 findings** | Source analysis; not a general security guarantee. |
 | API surface | [OpenAPI JSON](../evidence/openapi.json): 29 operations | Generated from the application. |
 | Migration and seed | Upgrade/downgrade/upgrade and seed idempotence tests passed; [seeded inventory](../evidence/seeded-inventory.json) | 8 products, 2 suppliers, 2 warehouses, 16 receipts, 931 units. |
-| Frontend | TypeScript checking and production build passed | JS 189.83 kB (57.70 kB gzip); CSS 32.94 kB (8.05 kB gzip). No browser interaction capture. |
+| Frontend | 13 component tests, TypeScript checking and production build passed | jsdom/React Testing Library; JS 190.25 kB (57.87 kB gzip), CSS 32.94 kB (8.05 kB gzip). No browser interaction capture. |
 | Helm/Compose | Helm lint/render and Compose configuration passed | No images built, containers started or Kubernetes release installed. |
 | IaC security | [Platform evidence](../evidence/platform/): Trivy 0 unexcepted HIGH/CRITICAL findings across 14 configuration files | Two documented EKS demo exceptions in `security/README.md`; scan is specific to these rules and source. |
 | Secret history | [Platform evidence](../evidence/platform/): Gitleaks 0 leaks in 12 commits | History at capture time; later commits need rescanning. |

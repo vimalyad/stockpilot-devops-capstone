@@ -1,0 +1,66 @@
+{
+  "verified_at": "2026-10-16T17:58:55.401558+00:00",
+  "presentation": {
+    "slides": 18,
+    "slides_with_notes": 18,
+    "notes_words": 1625,
+    "editable_text_shapes": 404,
+    "off_slide_shapes": 0,
+    "author": "Vimal Kumar Yadav",
+    "last_modified_by": "Vimal Kumar Yadav"
+  },
+  "pdf": {
+    "pages": 18
+  },
+  "video": {
+    "duration_seconds": 422.013333,
+    "full_decode_exit_code": 0,
+    "decoder_messages": "",
+    "streams": [
+      {
+        "codec_name": "h264",
+        "codec_type": "video",
+        "width": 1600,
+        "height": 900,
+        "r_frame_rate": "10/1",
+        "duration": "421.830957"
+      },
+      {
+        "codec_name": "aac",
+        "codec_type": "audio",
+        "sample_rate": "48000",
+        "channels": 1,
+        "r_frame_rate": "0/0",
+        "duration": "421.992333"
+      },
+      {
+        "codec_name": "mov_text",
+        "codec_type": "subtitle",
+        "r_frame_rate": "0/0",
+        "duration": "420.624000"
+      }
+    ],
+    "narration": "Kokoro ONNX / generic af_heart synthetic voice",
+    "visuals": "Original presentation diagrams, no live browser/deployment capture",
+    "loudness_target_lufs": -16,
+    "true_peak_target_db": -1.5
+  },
+  "files": {
+    "demo/StockPilot-Capstone-Narrated.mp4": {
+      "bytes": 11692736,
+      "sha256": "10317abe0e9d3bae892293b2c06eb7a0e429dba1ef07672a18e6c88c02536c92"
+    },
+    "docs/presentation/StockPilot-Capstone.pptx": {
+      "bytes": 100286,
+      "sha256": "ffb7b293cdd5ad398475b97c7da96bc6e7c433d7b47e71ed183bc30b094eef52"
+    },
+    "docs/presentation/StockPilot-Capstone.pdf": {
+      "bytes": 1855146,
+      "sha256": "983f84741c91d16276f7539d426525d7ec837ebe3e8173f93e4d7fd5055c4673"
+    },
+    "demo/StockPilot-Capstone.srt": {
+      "bytes": 9136,
+      "sha256": "35a6c528ce4220dc560d1afdfeaf106a1ec2c5b7c4dcde5871348a2e406f4d9f"
+    }
+  }
+}

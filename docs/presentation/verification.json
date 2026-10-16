@@ -1,6 +1,6 @@
 {
-  "backend": "36 passed · 1 skipped",
+  "backend": "40 passed · 1 skipped",
   "backend_detail": "97% coverage; PostgreSQL concurrency pending",
-  "frontend": "TypeScript + build passed",
-  "frontend_detail": "Production JS 189.83 kB / gzip 57.70 kB"
+  "frontend": "13 tests + build passed",
+  "frontend_detail": "Component tests; browser capture pending"
 }

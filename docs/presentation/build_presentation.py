@@ -37,6 +37,24 @@ TEAL = "76E0BD"
 ORANGE = "FFAE79"
 BLUE = "91BDF0"
 GRID = "324653"
+VIDEO_NARRATION = {
+3: "Stock Pilot combines several stacks with specific responsibilities. React and Type Script provide the interface. Fast A P I, SQL Alchemy and Alembic implement validated transactions and migrations. Postgres owns durable inventory. Redis and Celery handle asynchronous reports. Docker and Helm package the runtime, while GitHub Actions, Argo C D and Terraform define delivery and infrastructure.",
+4: "The browser reaches the A P I through a proxy or ingress, and the A P I reads and writes Postgres. Report requests and the scheduler enqueue work in Redis. Celery workers read the database and write timestamped reports into the cache. Workers and A P I replicas have separate responsibilities. Redis never owns authoritative stock.",
+5: "Suppliers connect to products and purchase orders. Each balance belongs to one product and one warehouse. Database constraints require nonnegative stock and prevent reserved units from exceeding physical stock. Movements record receipts, issues and transfers. Reservations record commitments. Foreign keys preserve the meaning of inventory history when catalogue records are changed or removed.",
+6: "Eight views organize the frontend: overview, inventory, movements, reservations, purchase orders, warehouses, suppliers and reports. Users can search products, export C S V data, manage catalogue records and perform stock workflows. Forms include validation and recoverable errors. Thirteen frontend tests exercise components and request payloads. This feature map is a diagram, not a browser screenshot.",
+7: 'In this illustrative transfer, twenty units move from Delhi to Bengaluru. Delhi falls from one hundred to eighty, while Bengaluru rises from forty to sixty. The total remains one hundred and forty. Both balances and the movement commit together. Available stock excludes reservations. An identical idempotent retry returns the existing movement instead of moving stock again.',
+8: 'Available stock equals on hand minus reserved. Releasing a reservation restores availability. Fulfilling creates the matching issue transaction. The same completion can be retried safely, while conflicting changes after closure are rejected. This preserves both physical stock and customer promises.',
+9: 'Purchase orders move from draft to ordered to received. Lines must match the selected supplier. Receiving commits all receipt movements together, with deterministic keys preventing duplicate stock. Drafts are editable. Partial deliveries and invoice matching remain future work.',
+10: 'The scheduler or report endpoint queues work in Redis. A Celery worker reads Postgres and caches a timestamped report for three minutes. The live dashboard uses its own database request, so report cache failures do not change authoritative inventory.',
+11: 'Postgres row locks coordinate competing stock changes across replicas. Stable product ordering reduces deadlock risk, while request fingerprints protect retries. SQLite tests verify rules, not production locking. Concurrent Postgres tests and measured load tests are still required before capacity claims.',
+12: 'The delivery workflow connects tests and security gates to image builds, scans and a temporary kind deployment. Commit S H A tags make releases traceable. Promotion updates Git only after its prerequisites pass. Hosted execution and registry publication require separate evidence.',
+13: 'Kubernetes defines replicas, Services, Ingress, probes, storage and one migration job. Autoscaling, disruption budgets and resource limits express operational expectations. Readiness checks database access. A rendered chart validates configuration; actual rollout, persistence and scaling still need a running cluster.',
+14: 'Release checks cover source, dependencies, secrets, infrastructure and images. Runtime controls reduce privileges and restrict access. The product currently has no sign in or role based permissions, so demo write endpoints remain private. Scan results apply to their specific revision.',
+15: 'Prometheus records request counts, errors and latency. Grafana panels and alerts organize those metrics, while structured logs support investigation. Argo C D reconciles the desired Helm release from Git. Live graphs and healthy synchronized status require real runtime evidence.',
+16: 'Terraform defines networking, E K S workers and storage. NAT is optional, with its tradeoffs documented. No cloud deployment is claimed without account access. Planning, applying, verification and teardown are separate milestones, and retained data requires deliberate cleanup decisions.',
+17: 'The evidence register separates implementation from execution. Local tests and builds have captured results. Docker and Chromium are blocked in this environment, so this video shows architecture rather than a simulated live application. Hosted delivery and cloud deployment remain unclaimed.',
+18: 'The live runbook starts with stock receiving, transfers, reservations and purchase orders, then demonstrates delivery, persistence, monitoring and GitOps. Capture each result only after execution. OpsPulse informed the documentation organization; Stock Pilot uses original implementation, diagrams and narration. Thank you.',
+}
 FONT_DIR = Path("/usr/share/fonts/google-noto")
 
 
@@ -155,6 +173,8 @@ def build():
     prs.slide_height=Inches(HEIGHT/120)
     prs.core_properties.title="StockPilot — Inventory, engineered for operations"
     prs.core_properties.author="Vimal Kumar Yadav"
+    prs.core_properties.last_modified_by="Vimal Kumar Yadav"
+    prs.core_properties.comments="Original StockPilot inventory and DevOps capstone presentation."
     prs.core_properties.subject="Session 21 DevOps capstone · 24BCS10273"
     records=[]
 
@@ -166,7 +186,7 @@ def build():
     s.rect(1130,246,360,400,PANEL)
     for y,w,c in [(285,260,TEAL),(365,200,BLUE),(445,285,ORANGE)]:
         s.rect(1165,y,w,45,c,6)
-    s.text(1165,542,"RECEIVE → RESERVE\nTRANSFER → REPLENISH",20,MUTED,True,285)
+    s.text(1165,542,"RECEIVE / RESERVE\nTRANSFER / REPLENISH",20,MUTED,True,285)
     s.text(65,669,"Vimal Kumar Yadav · 24BCS10273",27,INK,True)
     s.note("Original explanatory diagrams · synthetic English narration · deployment evidence stated explicitly")
     records.append(s.finish("Welcome to StockPilot, a multi warehouse inventory and procurement platform, built as an original DevOps capstone. The product follows a physical item from a supplier purchase through receiving, reservation, transfer and fulfilment. Around that product is a delivery platform using containers, Kubernetes, automated security gates, monitoring and infrastructure as code. This presentation explains the implemented design and the available verification. The diagrams are original illustrations, not screenshots of a live cluster. The audio is synthetic English narration.","README.md; backend/app/models.py; docs/DELIVERY.md"))
@@ -230,9 +250,9 @@ def build():
     s.card(1080,315,460,250,"BENGALURU / TARGET","Before: 40 on hand\nReserved: 0\nAfter: 60 on hand",BLUE)
     s.line(535,429,1065,429,ORANGE,5,True)
     s.pill(622,365,"TRANSFER 20 UNITS",ORANGE,330)
-    s.text(580,464,"140 total → 140 total",29,INK,True,460)
+    s.text(580,464,"140 total > 140 total",29,INK,True,460)
     s.rect(60,615,1480,109,PANEL)
-    s.text(90,641,"Validate → lock product → check available → update both balances → append movement → commit",25,TEAL,True,1420)
+    s.text(90,641,"Validate > lock product > check available > update both balances > append movement > commit",25,TEAL,True,1420)
     s.note("The numbers above illustrate the rule; real execution results are recorded separately in the evidence files.")
     records.append(s.finish("Consider an illustrative transfer of twenty keyboards. Delhi begins with one hundred units, ten already reserved. Bengaluru begins with forty. After the transfer, Delhi holds eighty and Bengaluru sixty. The combined total is unchanged. The API locks the relevant product, checks available stock, updates both balances and appends the movement before committing. A repeated request with the same idempotency key returns the existing movement. Reusing the key for different data produces a conflict. This protects normal client retries from duplicating stock changes.","backend/app/inventory.py: apply_movement, duplicate, lock_products"))
 
@@ -262,7 +282,7 @@ def build():
     s.card(1070,255,470,260,"CACHE","Redis report + generated_at\n180-second cache expiry",ORANGE,"03 / SERVE")
     s.rect(60,570,1480,150,PANEL2)
     s.text(90,598,"Graceful degradation",31,TEAL,True,1400)
-    s.text(90,650,"Report cache unavailable → explicit report error. Live dashboard → database-backed request.",26,INK,width=1400)
+    s.text(90,650,"Report cache unavailable > explicit report error. Live dashboard > database-backed request.",26,INK,width=1400)
     s.note("Redis/Celery execution requires a runnable service environment; configuration alone is not a worker execution result.")
     records.append(s.finish("Background reporting adds a separate Python worker stack to the application. The report endpoint queues a task, and the scheduler can request refreshes every sixty seconds. A worker reads a database snapshot and stores the result in Redis for one hundred and eighty seconds, including its generation time. This makes staleness visible and keeps the cache disposable. Redis is not the source of inventory truth. A worker or cache outage is reported explicitly. The live dashboard follows its own database-backed path. Service execution evidence is tracked separately from the implementation.","backend/app/tasks.py; backend/app/main.py; backend/app/reporting.py"))
 
@@ -282,7 +302,7 @@ def build():
         if i<4:s.line(x+282,420,x+296,420,c,3,True)
     s.rect(60,596,1480,128,PANEL2)
     s.text(90,623,"TRACEABILITY",21,ORANGE,True,300)
-    s.text(388,618,"Commit SHA → container image → Helm value → deployed revision",27,INK,True,1100)
+    s.text(388,618,"Commit SHA > container image > Helm value > deployed revision",27,INK,True,1100)
     s.text(388,661,"A workflow file is not a successful GitHub Actions run.",23,MUTED,width=1100)
     s.note("CI definitions are reviewable locally. Hosted execution and GHCR publication require repository/network access.")
     records.append(s.finish("The delivery workflow links source validation to deployment. It defines backend checks, a frontend build, source and dependency security gates, container image builds and vulnerability scanning. A temporary kind cluster provides a place to install the Helm chart and smoke test it. Promotion updates the desired image revision only after its prerequisites succeed. Commit SHA image tags connect a release to a specific source version. These are implementation details in the workflow. A successful hosted run, published image and deployment must each be demonstrated separately before they are reported as verified.",".github/workflows; scripts; gitops"))
@@ -304,8 +324,8 @@ def build():
     records.append(s.finish("Security operates before release and during execution. The repository defines checks for source code, dependencies, secrets, container images and infrastructure. Runtime controls reduce privileges and make credentials and network boundaries explicit. These measures do not add user authentication by themselves. The current application has no sign in or role based permissions, so write APIs should remain private in a demo environment. A passing scan also applies to one source revision and vulnerability database. It should never be translated into a blanket claim that the platform is secure.",".github/workflows; security; backend/app/main.py; helm/stockpilot/templates"))
 
     s=Scene(prs,15,"Observe requests, then explain failures.","Monitoring and GitOps")
-    s.card(60,255,710,350,"PROMETHEUS → GRAFANA","HTTP request counts\nRequest-duration histograms\nStatus labels and route labels\nDashboard and alert definitions",TEAL)
-    s.card(830,255,710,350,"GIT → ARGO CD","Review desired state in Git\nReconcile the Helm release\nTrack the deployed image revision\nRecover from configuration drift",BLUE)
+    s.card(60,255,710,350,"PROMETHEUS > GRAFANA","HTTP request counts\nRequest-duration histograms\nStatus labels and route labels\nDashboard and alert definitions",TEAL)
+    s.card(830,255,710,350,"GIT > ARGO CD","Review desired state in Git\nReconcile the Helm release\nTrack the deployed image revision\nRecover from configuration drift",BLUE)
     s.rect(60,649,1480,92,PANEL2)
     s.text(88,676,"JSON request logs connect method, route, status and elapsed time.",28,INK,True,1420)
     s.note("Live Grafana graphs and Argo CD Healthy/Synced status require captured runtime evidence.")
@@ -314,9 +334,9 @@ def build():
     s=Scene(prs,16,"Cloud infrastructure is explicit and reviewable.","Terraform / deployment boundary")
     s.rect(60,245,1480,460,PANEL)
     s.text(90,273,"AWS VPC",22,TEAL,True,1300)
-    s.rect(100,337,650,200,PANEL2,10,BLUE);s.text(125,362,"PUBLIC SUBNETS",21,BLUE,True,600);s.text(125,407,"Internet access and optional NAT\nExplicit networking choices",26,INK,width=590)
-    s.rect(850,337,650,200,PANEL2,10,TEAL);s.text(875,362,"PRIVATE SUBNETS",21,TEAL,True,600);s.text(875,407,"EKS managed worker nodes\nEncrypted persistent storage",26,INK,width=590)
-    s.text(100,585,"Plan → review → apply → verify → capture → destroy",32,INK,True,1370)
+    s.rect(100,337,650,200,PANEL2,10,BLUE);s.text(125,362,"PUBLIC SUBNETS",21,BLUE,True,600);s.text(125,407,"Default demo worker placement\nPublic IPs; NAT is optional",26,INK,width=590)
+    s.rect(850,337,650,200,PANEL2,10,TEAL);s.text(875,362,"PRIVATE SUBNETS",21,TEAL,True,600);s.text(875,407,"Workers here with NAT enabled\nPrivate subnets remain defined",26,INK,width=590)
+    s.text(100,585,"Plan > review > apply > verify > capture > destroy",32,INK,True,1370)
     s.pill(1010,647,"NO AWS DEPLOYMENT CLAIMED",ORANGE,480)
     s.note("AWS access is unavailable for this session. Definitions are separate from a real Terraform plan or apply.")
     records.append(s.finish("Terraform describes a possible AWS deployment with a virtual private cloud, public and private subnets, EKS workers and storage integration. Network access, node sizing and NAT choices should be reviewed before applying it. The user does not currently have AWS access, and this session does not claim a cloud deployment. Infrastructure definitions, a successful plan, an apply and a verified running application are different milestones. A complete cloud demonstration also includes teardown, so the presenter should capture the result and then remove resources that are no longer needed.","terraform; docs/operations-guide.md; docs/evidence.md"))
@@ -347,6 +367,9 @@ def build():
     prs.save(OUT/"StockPilot-Capstone.pptx")
     images=[Image.open(FRAMES/f"{i:02d}.png").convert("RGB") for i in range(1,19)]
     images[0].save(OUT/"StockPilot-Capstone.pdf",save_all=True,append_images=images[1:],resolution=144)
+    for record in records:
+        record["presenter_notes"] = record["narration"]
+        record["narration"] = VIDEO_NARRATION.get(record["number"],record["narration"])
     (DEMO/"chapters.json").write_text(json.dumps(records,indent=2)+"\n")
     script=["# StockPilot narration\n", "Synthetic English voice; original explanatory diagrams. This is not a live browser or cloud recording.\n"]
     for r in records:script.append(f"## {r['number']:02d} — {r['title']}\n\n{r['narration']}\n\nSource: `{r['source']}`\n")
@@ -372,7 +395,7 @@ def video(records):
         import onnxruntime as runtime
         def cpu_session(path):
             options=runtime.SessionOptions()
-            options.intra_op_num_threads=4
+            options.intra_op_num_threads=12
             options.inter_op_num_threads=1
             options.log_severity_level=3
             return runtime.InferenceSession(path,sess_options=options,providers=["CPUExecutionProvider"])
@@ -381,8 +404,11 @@ def video(records):
         print("Narration engine: Kokoro ONNX, af_heart (generic synthetic voice)",flush=True)
     for rec in records:
         n=rec["number"];txt=work/f"{n:02d}.txt";wav=work/f"{n:02d}.wav";mp4=work/f"{n:02d}.mp4"
+        narration_unchanged=txt.exists() and txt.read_text()==rec["narration"]
         txt.write_text(rec["narration"])
-        if neural is not None:
+        if wav.exists() and narration_unchanged:
+            print(f"Reusing completed narration {n:02d}",flush=True)
+        elif neural is not None:
             import numpy as np
             spoken=rec["narration"]
             for before,after in [("StockPilot","Stock Pilot"),("FastAPI","Fast A P I"),("PostgreSQL","Postgres"),("SQLAlchemy","S Q L Alchemy"),("SQLite","S Q Lite"),("GitOps","Git Ops"),("DevOps","Dev Ops"),("DevSecOps","Dev Sec Ops"),("Argo CD","Argo C D"),("API","A P I"),("APIs","A P I's"),("SHA","sha"),("CI","C I"),("RBAC","R back"),("TypeScript","Type Script")]:
@@ -411,7 +437,7 @@ def video(records):
     (DEMO/"StockPilot-Capstone.srt").write_text("\n".join(subtitles))
     (DEMO/"CHAPTERS.md").write_text("# Video chapters\n\nDuration: "+timestamp(elapsed)[:-4]+"\n\n```text\n"+"\n".join(chapters)+"\n```\n")
     (DEMO/"chapters.json").write_text(json.dumps(records,indent=2)+"\n")
-    subprocess.run(["ffmpeg","-hide_banner","-loglevel","error","-y","-f","concat","-safe","0","-i",str(work/"concat.txt"),"-i",str(DEMO/"StockPilot-Capstone.srt"),"-map","0:v","-map","0:a","-map","1:0","-c:v","copy","-c:a","copy","-c:s","mov_text","-metadata:s:s:0","language=eng","-metadata","title=StockPilot: Inventory, engineered for operations","-metadata","artist=Vimal Kumar Yadav","-movflags","+faststart",str(DEMO/"StockPilot-Capstone-Narrated.mp4")],check=True)
+    subprocess.run(["ffmpeg","-hide_banner","-loglevel","error","-y","-f","concat","-safe","0","-i",str(work/"concat.txt"),"-i",str(DEMO/"StockPilot-Capstone.srt"),"-map","0:v","-map","0:a","-map","1:0","-c:v","copy","-c:a","aac","-b:a","128k","-ar","48000","-af","loudnorm=I=-16:TP=-1.5:LRA=11","-c:s","mov_text","-metadata:s:s:0","language=eng","-metadata","title=StockPilot: Inventory, engineered for operations","-metadata","artist=Vimal Kumar Yadav","-movflags","+faststart",str(DEMO/"StockPilot-Capstone-Narrated.mp4")],check=True)
     print(f"Built narrated MP4: {elapsed/60:.1f} minutes",flush=True)
 
 
