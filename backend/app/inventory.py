@@ -27,7 +27,9 @@ def lock_products(db, product_ids):
 
 def balance(db, product_id, warehouse_id):
     require(db, Warehouse, warehouse_id)
-    row = db.scalar(select(Balance).where(Balance.product_id == product_id, Balance.warehouse_id == warehouse_id))
+    row = db.scalar(
+        select(Balance).where(Balance.product_id == product_id, Balance.warehouse_id == warehouse_id)
+    )
     if row is None:
         row = Balance(product_id=product_id, warehouse_id=warehouse_id, on_hand=0, reserved=0)
         db.add(row)
@@ -69,12 +71,29 @@ def apply_movement(db, data):
 
 @router.get("/inventory")
 def inventory(db: DB):
-    rows = db.execute(select(Balance, Product, Warehouse).join(Product, Product.id == Balance.product_id)
-                      .join(Warehouse, Warehouse.id == Balance.warehouse_id).order_by(Product.name, Warehouse.code)).all()
-    return [{"product_id": p.id, "sku": p.sku, "name": p.name, "category": p.category,
-             "price_cents": p.price_cents, "warehouse_id": w.id, "warehouse": w.name, "warehouse_code": w.code,
-             "on_hand": b.on_hand, "reserved": b.reserved, "available": b.on_hand - b.reserved,
-             "reorder_point": p.reorder_point} for b, p, w in rows]
+    rows = db.execute(
+        select(Balance, Product, Warehouse)
+        .join(Product, Product.id == Balance.product_id)
+        .join(Warehouse, Warehouse.id == Balance.warehouse_id)
+        .order_by(Product.name, Warehouse.code)
+    ).all()
+    return [
+        {
+            "product_id": p.id,
+            "sku": p.sku,
+            "name": p.name,
+            "category": p.category,
+            "price_cents": p.price_cents,
+            "warehouse_id": w.id,
+            "warehouse": w.name,
+            "warehouse_code": w.code,
+            "on_hand": b.on_hand,
+            "reserved": b.reserved,
+            "available": b.on_hand - b.reserved,
+            "reorder_point": p.reorder_point,
+        }
+        for b, p, w in rows
+    ]
 
 
 @router.get("/movements", response_model=list[MovementOut])
@@ -124,10 +143,17 @@ def finish_reservation(record_id: int, action: Literal["release", "fulfill"], db
     stock = balance(db, row.product_id, row.warehouse_id)
     stock.reserved -= row.quantity
     if action == "fulfill":
-        apply_movement(db, MovementIn(product_id=row.product_id, warehouse_id=row.warehouse_id,
-                                     kind="issue", quantity=row.quantity, reference=row.reference,
-                                     idempotency_key=f"reservation-fulfill-{row.id}"))
+        apply_movement(
+            db,
+            MovementIn(
+                product_id=row.product_id,
+                warehouse_id=row.warehouse_id,
+                kind="issue",
+                quantity=row.quantity,
+                reference=row.reference,
+                idempotency_key=f"reservation-fulfill-{row.id}",
+            ),
+        )
     row.status = target
     db.commit()
     return row
-

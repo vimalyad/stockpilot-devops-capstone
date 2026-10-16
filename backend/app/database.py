@@ -19,4 +19,3 @@ SessionLocal = sessionmaker(bind=engine, expire_on_commit=False)
 def get_db():
     with SessionLocal() as session:
         yield session
-

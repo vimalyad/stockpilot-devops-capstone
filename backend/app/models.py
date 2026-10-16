@@ -105,4 +105,3 @@ class OrderLine(Base):
         CheckConstraint("quantity > 0"),
         CheckConstraint("unit_cost_cents >= 0"),
     )
-

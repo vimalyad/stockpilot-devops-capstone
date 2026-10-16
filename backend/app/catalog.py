@@ -20,11 +20,17 @@ def require(db, model, record_id):
 
 
 @router.get("/products", response_model=list[ProductOut])
-def products(db: DB, search: str = Query("", max_length=120),
-             limit: int = Query(100, ge=1, le=200), offset: int = Query(0, ge=0)):
+def products(
+    db: DB,
+    search: str = Query("", max_length=120),
+    limit: int = Query(100, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+):
     query = select(Product).order_by(Product.id)
     if search:
-        query = query.where(Product.name.icontains(search, autoescape=True) | Product.sku.icontains(search, autoescape=True))
+        query = query.where(
+            Product.name.icontains(search, autoescape=True) | Product.sku.icontains(search, autoescape=True)
+        )
     return db.scalars(query.offset(offset).limit(limit)).all()
 
 
@@ -100,4 +106,3 @@ def create_warehouse(data: WarehouseIn, db: DB):
     db.add(row)
     db.commit()
     return row
-

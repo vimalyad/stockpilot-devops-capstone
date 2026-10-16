@@ -33,7 +33,9 @@ def order(record_id: int, db: DB):
 @router.post("", response_model=OrderOut, status_code=201)
 def create_order(data: OrderIn, db: DB):
     validate_order(db, data)
-    row = PurchaseOrder(**data.model_dump(exclude={"items"}), items=[OrderLine(**item.model_dump()) for item in data.items])
+    row = PurchaseOrder(
+        **data.model_dump(exclude={"items"}), items=[OrderLine(**item.model_dump()) for item in data.items]
+    )
     db.add(row)
     db.commit()
     return row
@@ -70,10 +72,17 @@ def transition(record_id: int, action: Literal["order", "receive", "cancel"], db
     if action == "receive":
         lock_products(db, [line.product_id for line in row.items])
         for line in sorted(row.items, key=lambda item: item.product_id):
-            apply_movement(db, MovementIn(product_id=line.product_id, warehouse_id=row.warehouse_id,
-                                         kind="receipt", quantity=line.quantity, reference=f"PO-{row.id:04}",
-                                         idempotency_key=f"po-receive-{row.id}-{line.id}"))
+            apply_movement(
+                db,
+                MovementIn(
+                    product_id=line.product_id,
+                    warehouse_id=row.warehouse_id,
+                    kind="receipt",
+                    quantity=line.quantity,
+                    reference=f"PO-{row.id:04}",
+                    idempotency_key=f"po-receive-{row.id}-{line.id}",
+                ),
+            )
     row.status = target
     db.commit()
     return row
-

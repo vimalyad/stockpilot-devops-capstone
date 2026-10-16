@@ -1,4 +1,5 @@
 """Idempotent, explicit demo seed. Never called automatically in production."""
+
 from sqlalchemy import select
 
 from .database import SessionLocal
@@ -12,11 +13,15 @@ def seed():
         if db.scalar(select(Product.id).limit(1)):
             print("Catalog already populated; demo seed skipped")
             return
-        suppliers = [Supplier(name="Circuit Supply Co.", email="orders@circuit.example", lead_days=3),
-                     Supplier(name="Form & Function", email="dispatch@form.example", lead_days=5)]
+        suppliers = [
+            Supplier(name="Circuit Supply Co.", email="orders@circuit.example", lead_days=3),
+            Supplier(name="Form & Function", email="dispatch@form.example", lead_days=5),
+        ]
         db.add_all(suppliers)
-        warehouses = [Warehouse(code="DEL-01", name="Delhi distribution", location="New Delhi"),
-                      Warehouse(code="BLR-02", name="Bengaluru fulfilment", location="Bengaluru")]
+        warehouses = [
+            Warehouse(code="DEL-01", name="Delhi distribution", location="New Delhi"),
+            Warehouse(code="BLR-02", name="Bengaluru fulfilment", location="Bengaluru"),
+        ]
         db.add_all(warehouses)
         db.flush()
         items = [
@@ -30,18 +35,31 @@ def seed():
             ("AU-045", "Studio headphones", "Audio", 899900, 10, 0, 48, 24),
         ]
         for sku, name, category, price, reorder, supplier, first, second in items:
-            product = Product(sku=sku, name=name, category=category, price_cents=price,
-                              reorder_point=reorder, supplier_id=suppliers[supplier].id)
+            product = Product(
+                sku=sku,
+                name=name,
+                category=category,
+                price_cents=price,
+                reorder_point=reorder,
+                supplier_id=suppliers[supplier].id,
+            )
             db.add(product)
             db.flush()
             for warehouse, quantity in zip(warehouses, (first, second)):
-                apply_movement(db, MovementIn(product_id=product.id, warehouse_id=warehouse.id, kind="receipt",
-                                             quantity=quantity, reference="Opening demo inventory",
-                                             idempotency_key=f"seed-{sku}-{warehouse.code}"))
+                apply_movement(
+                    db,
+                    MovementIn(
+                        product_id=product.id,
+                        warehouse_id=warehouse.id,
+                        kind="receipt",
+                        quantity=quantity,
+                        reference="Opening demo inventory",
+                        idempotency_key=f"seed-{sku}-{warehouse.code}",
+                    ),
+                )
         db.commit()
         print("Seeded 8 products, 2 suppliers, 2 warehouses and 16 opening receipts")
 
 
 if __name__ == "__main__":
     seed()
-

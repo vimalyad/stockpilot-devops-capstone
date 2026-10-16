@@ -22,10 +22,19 @@ log = logging.getLogger("stockpilot")
 
 
 def create_app():
-    app = FastAPI(title="StockPilot API", version="1.0.0", description="Inventory, procurement and warehouse operations")
+    app = FastAPI(
+        title="StockPilot API", version="1.0.0", description="Inventory, procurement and warehouse operations"
+    )
     registry = CollectorRegistry()
-    requests = Counter("stockpilot_http_requests_total", "Completed HTTP requests", ["method", "route", "status"], registry=registry)
-    latency = Histogram("stockpilot_http_request_duration_seconds", "HTTP duration", ["method", "route"], registry=registry)
+    requests = Counter(
+        "stockpilot_http_requests_total",
+        "Completed HTTP requests",
+        ["method", "route", "status"],
+        registry=registry,
+    )
+    latency = Histogram(
+        "stockpilot_http_request_duration_seconds", "HTTP duration", ["method", "route"], registry=registry
+    )
 
     @app.middleware("http")
     async def observe(request: Request, call_next):
@@ -36,13 +45,25 @@ def create_app():
         if route != "/metrics":
             requests.labels(request.method, route, response.status_code).inc()
             latency.labels(request.method, route).observe(elapsed)
-            log.info(json.dumps({"method": request.method, "route": route, "status": response.status_code, "duration_ms": round(elapsed * 1000, 2)}))
+            log.info(
+                json.dumps(
+                    {
+                        "method": request.method,
+                        "route": route,
+                        "status": response.status_code,
+                        "duration_ms": round(elapsed * 1000, 2),
+                    }
+                )
+            )
         response.headers["X-Content-Type-Options"] = "nosniff"
         return response
 
     @app.exception_handler(IntegrityError)
     async def conflict(_request, _exception):
-        return JSONResponse(status_code=409, content={"detail": "Record conflicts with an existing value or referenced inventory history"})
+        return JSONResponse(
+            status_code=409,
+            content={"detail": "Record conflicts with an existing value or referenced inventory history"},
+        )
 
     @app.get("/")
     def root():
@@ -78,7 +99,9 @@ def create_app():
         try:
             task = refresh_report.delay()
         except (OperationalError, RedisError):
-            raise HTTPException(503, "Background processing is unavailable; live inventory remains accessible") from None
+            raise HTTPException(
+                503, "Background processing is unavailable; live inventory remains accessible"
+            ) from None
         return {"task_id": task.id, "status": "queued"}
 
     @app.get("/api/reports/latest", tags=["Reports"])
@@ -98,4 +121,3 @@ def create_app():
 
 
 app = create_app()
-

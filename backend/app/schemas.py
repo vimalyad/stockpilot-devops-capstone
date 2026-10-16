@@ -106,4 +106,3 @@ class OrderOut(OrderIn):
     id: int
     status: str
     created_at: datetime
-
