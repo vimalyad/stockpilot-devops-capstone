@@ -1,3 +1,4 @@
+import { createRequestKey, inventoryCsv } from './export';
 import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
 
 type Product = { id: number; sku: string; name: string; category: string; price_cents: number; reorder_point: number; supplier_id: number | null };
@@ -18,7 +19,7 @@ const empty: Data = {products: [], suppliers: [], warehouses: [], inventory: [],
 const currency = (cents: number) => new Intl.NumberFormat('en-IN', {style: 'currency', currency: 'INR', maximumFractionDigits: 2, minimumFractionDigits: 0}).format(cents / 100);
 const number = (value: number) => value.toLocaleString('en-IN');
 const date = (value: string) => new Date(value.endsWith('Z') || /[+-]\d\d:\d\d$/.test(value) ? value : value + 'Z').toLocaleString('en-IN', {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'});
-const key = () => `web-${crypto.randomUUID()}`;
+const key = createRequestKey;
 async function api<T>(path: string, method = 'GET', body?: unknown): Promise<T> {
   const response = await fetch('/api' + path, {method, headers: body === undefined ? undefined : {'Content-Type': 'application/json'}, body: body === undefined ? undefined : JSON.stringify(body)});
   if (!response.ok) {
@@ -27,6 +28,14 @@ async function api<T>(path: string, method = 'GET', body?: unknown): Promise<T> 
     throw new Error(detail || `Request failed (${response.status})`);
   }
   return response.status === 204 ? undefined as T : response.json();
+}
+async function allProducts(): Promise<Product[]> {
+  const products: Product[] = [];
+  for (let offset = 0; ; offset += 200) {
+    const page = await api<Product[]>(`/products?limit=200&offset=${offset}`);
+    products.push(...page);
+    if (page.length < 200) return products;
+  }
 }
 const paths: Record<string, string> = {
   Overview: 'M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z',
@@ -97,7 +106,7 @@ export default function App() {
   const load = useCallback(async () => {
     try {
       const [products, suppliers, warehouses, inventory, movements, reservations, orders, dashboard] = await Promise.all([
-        api<Product[]>('/products?limit=200'), api<Supplier[]>('/suppliers'), api<Warehouse[]>('/warehouses'), api<Balance[]>('/inventory'), api<Movement[]>('/movements?limit=200'), api<Reservation[]>('/reservations'), api<Order[]>('/purchase-orders'), api<Dashboard>('/dashboard')
+        allProducts(), api<Supplier[]>('/suppliers'), api<Warehouse[]>('/warehouses'), api<Balance[]>('/inventory'), api<Movement[]>('/movements?limit=200'), api<Reservation[]>('/reservations'), api<Order[]>('/purchase-orders'), api<Dashboard>('/dashboard')
       ]);
       setData({products, suppliers, warehouses, inventory, movements, reservations, orders, dashboard}); setError('');
     } catch (e) { setError((e as Error).message || 'Unable to connect to the API. Check that the backend is running.'); }
@@ -161,7 +170,7 @@ export default function App() {
   const actionKind: Partial<Record<Page, FormKind>> = {Inventory: 'product', Movements: 'movement', 'Purchase orders': 'order', Reservations: 'reservation', Warehouses: 'warehouse', Suppliers: 'supplier'};
   const exportInventory = () => {
     const rows = [['SKU','Product','Warehouse','On hand','Reserved','Available'], ...data.inventory.map(b => [b.sku,b.name,b.warehouse,b.on_hand,b.reserved,b.available])];
-    const csv = rows.map(row => row.map(value => '"' + String(value).replace(/"/g, '""') + '"').join(',')).join('\n');
+    const csv = inventoryCsv(rows);
     const url = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8;'})); const link = document.createElement('a'); link.href=url; link.download='stockpilot-inventory.csv'; link.click(); URL.revokeObjectURL(url); setToast('Inventory exported as CSV.');
   };
 
