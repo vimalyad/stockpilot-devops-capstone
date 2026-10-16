@@ -53,7 +53,7 @@ VIDEO_NARRATION = {
 15: 'Prometheus records request counts, errors and latency. Grafana panels and alerts organize those metrics, while structured logs support investigation. Argo C D reconciles the desired Helm release from Git. Live graphs and healthy synchronized status require real runtime evidence.',
 16: 'Terraform defines networking, E K S workers and storage. NAT is optional, with its tradeoffs documented. No cloud deployment is claimed without account access. Planning, applying, verification and teardown are separate milestones, and retained data requires deliberate cleanup decisions.',
 17: 'The evidence register separates implementation from execution. Local tests and builds have captured results. Docker and Chromium are blocked in this environment, so this video shows architecture rather than a simulated live application. Hosted delivery and cloud deployment remain unclaimed.',
-18: 'The live runbook starts with stock receiving, transfers, reservations and purchase orders, then demonstrates delivery, persistence, monitoring and GitOps. Capture each result only after execution. OpsPulse informed the documentation organization; Stock Pilot uses original implementation, diagrams and narration. Thank you.',
+18: 'The live runbook starts with stock receiving, transfers, reservations and purchase orders, then demonstrates delivery, persistence, monitoring and GitOps. Capture each result only after execution. Thank you.',
 }
 FONT_DIR = Path("/usr/share/fonts/google-noto")
 
@@ -361,8 +361,8 @@ def build():
     s.card(60,255,710,370,"PRODUCT WALKTHROUGH","1  Open dashboard and catalogue\n2  Receive and transfer stock\n3  Reserve, release and fulfil\n4  Order and receive a purchase\n5  Refresh a background report",TEAL)
     s.card(830,255,710,370,"PLATFORM WALKTHROUGH","1  Run backend and frontend checks\n2  Build containers and install Helm\n3  Verify persistence and recovery\n4  Capture monitoring and GitOps\n5  Plan/apply cloud only with access",BLUE)
     s.text(65,672,"Built to explain every stock change—and every release.",35,TEAL,True,1450)
-    s.note("Reference: Chhavi Ahlawat's OpsPulse for evidence organization; original StockPilot application and visuals.")
-    records.append(s.finish("For the live presentation, start with the dashboard and catalogue. Receive stock, transfer it, reserve units, then demonstrate release and fulfilment. Create a purchase order and receive it to close the procurement loop. Next, show the checks, container deployment, persistent data, monitoring and GitOps evidence. The remaining environment-dependent captures are listed in the runbook. Chhavi Ahlawat's OpsPulse repository informed the organization of evidence and presentation material; the StockPilot domain, implementation and diagrams are original. Thank you for exploring how product rules and delivery engineering work together.","demo/RUNBOOK.md; docs/operations-guide.md; https://github.com/Chhavi07-arch/OpsPulse-devops-platform"))
+    s.note("Use the runbook to demonstrate product workflows, delivery checks and operational recovery.")
+    records.append(s.finish("For the live presentation, start with the dashboard and catalogue. Receive stock, transfer it, reserve units, then demonstrate release and fulfilment. Create a purchase order and receive it to close the procurement loop. Next, show the checks, container deployment, persistent data, monitoring and GitOps evidence. The remaining environment-dependent captures are listed in the runbook. Thank you for exploring how product rules and delivery engineering work together.","demo/RUNBOOK.md; docs/operations-guide.md"))
 
     prs.save(OUT/"StockPilot-Capstone.pptx")
     images=[Image.open(FRAMES/f"{i:02d}.png").convert("RGB") for i in range(1,19)]

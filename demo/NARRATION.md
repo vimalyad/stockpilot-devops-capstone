@@ -106,6 +106,6 @@ Source: `docs/evidence.md; docs/presentation/verification.json; demo/README.md`
 
 ## 18 — A complete demo has a clear next action.
 
-The live runbook starts with stock receiving, transfers, reservations and purchase orders, then demonstrates delivery, persistence, monitoring and GitOps. Capture each result only after execution. OpsPulse informed the documentation organization; Stock Pilot uses original implementation, diagrams and narration. Thank you.
+The live runbook starts with stock receiving, transfers, reservations and purchase orders, then demonstrates delivery, persistence, monitoring and GitOps. Capture each result only after execution. Thank you.
 
-Source: `demo/RUNBOOK.md; docs/operations-guide.md; https://github.com/Chhavi07-arch/OpsPulse-devops-platform`
+Source: `demo/RUNBOOK.md; docs/operations-guide.md`

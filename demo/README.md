@@ -30,4 +30,4 @@ python docs/presentation/build_presentation.py --video
 
 The script currently uses Noto Sans fonts from `/usr/share/fonts/google-noto`; adjust `FONT_DIR` on another operating system. Intermediate audio and video segments are ignored under `.render/`.
 
-Reference organization: [Chhavi Ahlawat's OpsPulse](https://github.com/Chhavi07-arch/OpsPulse-devops-platform). Speech implementation: [kokoro-onnx](https://github.com/thewh1teagle/kokoro-onnx) (MIT), [Kokoro model](https://huggingface.co/hexgrad/Kokoro-82M) (Apache 2.0). The StockPilot application, slide layouts, diagrams and narration are original.
+Speech implementation: [kokoro-onnx](https://github.com/thewh1teagle/kokoro-onnx) (MIT), [Kokoro model](https://huggingface.co/hexgrad/Kokoro-82M) (Apache 2.0). The StockPilot application, slide layouts, diagrams and narration are original.

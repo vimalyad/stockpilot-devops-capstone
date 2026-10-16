@@ -1,9 +1,9 @@
 {
-  "verified_at": "2026-10-16T17:58:55.401558+00:00",
+  "verified_at": "2026-10-16T18:27:01.445474+00:00",
   "presentation": {
     "slides": 18,
     "slides_with_notes": 18,
-    "notes_words": 1625,
+    "notes_words": 1604,
     "editable_text_shapes": 404,
     "off_slide_shapes": 0,
     "author": "Vimal Kumar Yadav",
@@ -13,7 +13,7 @@
     "pages": 18
   },
   "video": {
-    "duration_seconds": 422.013333,
+    "duration_seconds": 414.213333,
     "full_decode_exit_code": 0,
     "decoder_messages": "",
     "streams": [
@@ -23,7 +23,7 @@
         "width": 1600,
         "height": 900,
         "r_frame_rate": "10/1",
-        "duration": "421.830957"
+        "duration": "414.130957"
       },
       {
         "codec_name": "aac",
@@ -31,13 +31,13 @@
         "sample_rate": "48000",
         "channels": 1,
         "r_frame_rate": "0/0",
-        "duration": "421.992333"
+        "duration": "414.192333"
       },
       {
         "codec_name": "mov_text",
         "codec_type": "subtitle",
         "r_frame_rate": "0/0",
-        "duration": "420.624000"
+        "duration": "412.870000"
       }
     ],
     "narration": "Kokoro ONNX / generic af_heart synthetic voice",
@@ -47,20 +47,20 @@
   },
   "files": {
     "demo/StockPilot-Capstone-Narrated.mp4": {
-      "bytes": 11692736,
-      "sha256": "10317abe0e9d3bae892293b2c06eb7a0e429dba1ef07672a18e6c88c02536c92"
+      "bytes": 11549250,
+      "sha256": "68ccae627f5240721ec4131f30098f01466620489ab807fd883ae2a53af1107f"
     },
     "docs/presentation/StockPilot-Capstone.pptx": {
-      "bytes": 100286,
-      "sha256": "ffb7b293cdd5ad398475b97c7da96bc6e7c433d7b47e71ed183bc30b094eef52"
+      "bytes": 100148,
+      "sha256": "8b613a7f9611e6eddd94da744bd9f0dd002d9535969cbd233f47ab3d0f4f1109"
     },
     "docs/presentation/StockPilot-Capstone.pdf": {
-      "bytes": 1855146,
-      "sha256": "983f84741c91d16276f7539d426525d7ec837ebe3e8173f93e4d7fd5055c4673"
+      "bytes": 1854093,
+      "sha256": "fba3323bf7dbb411ce78ddaa62bdd7904067a47c93792c6851c4bb2d66e5ef9b"
     },
     "demo/StockPilot-Capstone.srt": {
-      "bytes": 9136,
-      "sha256": "35a6c528ce4220dc560d1afdfeaf106a1ec2c5b7c4dcde5871348a2e406f4d9f"
+      "bytes": 8986,
+      "sha256": "a5b014dcebced227479869a56d4bb68e0f72fef812374985a4b07ab72e733300"
     }
   }
 }

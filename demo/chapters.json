@@ -172,11 +172,11 @@
   {
     "number": 18,
     "title": "A complete demo has a clear next action.",
-    "narration": "The live runbook starts with stock receiving, transfers, reservations and purchase orders, then demonstrates delivery, persistence, monitoring and GitOps. Capture each result only after execution. OpsPulse informed the documentation organization; Stock Pilot uses original implementation, diagrams and narration. Thank you.",
-    "source": "demo/RUNBOOK.md; docs/operations-guide.md; https://github.com/Chhavi07-arch/OpsPulse-devops-platform",
+    "narration": "The live runbook starts with stock receiving, transfers, reservations and purchase orders, then demonstrates delivery, persistence, monitoring and GitOps. Capture each result only after execution. Thank you.",
+    "source": "demo/RUNBOOK.md; docs/operations-guide.md",
     "image": "docs/presentation/slides/18.png",
-    "presenter_notes": "For the live presentation, start with the dashboard and catalogue. Receive stock, transfer it, reserve units, then demonstrate release and fulfilment. Create a purchase order and receive it to close the procurement loop. Next, show the checks, container deployment, persistent data, monitoring and GitOps evidence. The remaining environment-dependent captures are listed in the runbook. Chhavi Ahlawat's OpsPulse repository informed the organization of evidence and presentation material; the StockPilot domain, implementation and diagrams are original. Thank you for exploring how product rules and delivery engineering work together.",
+    "presenter_notes": "For the live presentation, start with the dashboard and catalogue. Receive stock, transfer it, reserve units, then demonstrate release and fulfilment. Create a purchase order and receive it to close the procurement loop. Next, show the checks, container deployment, persistent data, monitoring and GitOps evidence. The remaining environment-dependent captures are listed in the runbook. Thank you for exploring how product rules and delivery engineering work together.",
     "start_seconds": 398.997,
-    "duration_seconds": 22.627
+    "duration_seconds": 14.873
   }
 ]

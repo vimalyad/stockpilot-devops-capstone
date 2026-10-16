@@ -165,5 +165,5 @@ Correct stock operations require transactions, validation and retry semantics to
 
 Next verification priorities are PostgreSQL concurrent testing, a live browser walkthrough, container/cluster execution, hosted security gates, GitOps reconciliation and monitoring evidence. Product extensions include authentication/RBAC, partial purchase receipts, audit identities and notifications. Capacity testing and database high availability are required before claiming production scale.
 
-The instructor's [Session 21 README](https://github.com/Nency-Ravaliya/devops-heros/blob/main/session21-python/README.md) and rubric define the assignment. [Chhavi Ahlawat's OpsPulse](https://github.com/Chhavi07-arch/OpsPulse-devops-platform) informed the illustrated documentation, speaker notes and explicit evidence boundaries. StockPilot uses an original inventory domain, implementation, diagrams and narration; no OpsPulse screenshots or deployment results are reused.
+The [Session 21 project brief](https://github.com/Nency-Ravaliya/devops-heros/blob/main/session21-python/README.md) and [grading rubric](https://github.com/Nency-Ravaliya/devops-heros/blob/main/session21-python/GRADING.md) define the assignment requirements.
 

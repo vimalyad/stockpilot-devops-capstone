@@ -1,6 +1,6 @@
 # Video chapters
 
-Duration: 00:07:01
+Duration: 00:06:53
 
 ```text
 00:00:00  01  Inventory, engineered for operations.
